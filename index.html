@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>shotbynels — Video Portfolio</title>
+<meta name="description" content="Video work by shotbynels — brand films, events, music and personal projects. Melbourne.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: cinematic dark single page — reel up top, filterable 16:9 grid, click-to-play modal */
+:root{
+  --bg:#121212;
+  --surface:#1c1b1a;
+  --line:#2e2c2a;
+  --ink:#f3efe9;
+  --muted:#9c958c;
+  --accent:#D97757;
+  --display:"Bricolage Grotesque", system-ui, sans-serif;
+  --body:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+
+/* Header */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.logo{font:700 20px/1 var(--display);letter-spacing:-.02em;text-decoration:none}
+.logo span{color:var(--accent)}
+nav{display:flex;gap:24px;font-size:15px}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+
+/* Intro + reel */
+.intro{padding:56px 0 28px;display:grid;gap:16px}
+.intro h1{font:700 clamp(36px,6vw,72px)/1.02 var(--display);letter-spacing:-.03em;text-wrap:balance;max-width:16ch}
+.intro p{color:var(--muted);max-width:56ch;font-size:18px}
+.reel{position:relative;aspect-ratio:16/9;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.reel iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.reel-label{display:flex;justify-content:space-between;gap:12px;margin-top:12px;color:var(--muted);font-size:14px}
+
+/* Filters */
+.work{padding:72px 0 24px}
+.work-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:28px}
+h2{font:700 clamp(28px,3.5vw,40px)/1.1 var(--display);letter-spacing:-.02em}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 14px/1 var(--body);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:10px 16px;cursor:pointer}
+.chip:hover{color:var(--ink);border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1a0f0a}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:28px 24px}
+@media (max-width:420px){.grid{grid-template-columns:1fr}}
+.card{display:grid;gap:12px;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer}
+.thumb{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.thumb .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;background:linear-gradient(135deg,#24211f,#171615)}
+.thumb .play{position:absolute;left:14px;bottom:14px;width:44px;height:44px;border-radius:50%;background:var(--accent);display:grid;place-items:center;opacity:0;transform:translateY(6px);transition:.25s ease}
+.card:hover .thumb img{transform:scale(1.04)}
+.card:hover .play,.card:focus-visible .play{opacity:1;transform:none}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.meta h3{font:500 18px/1.3 var(--display);letter-spacing:-.01em}
+.meta .cat{font-size:13px;color:var(--accent);white-space:nowrap}
+.sub{color:var(--muted);font-size:14px;margin-top:-6px}
+
+/* About + contact */
+.about{padding:80px 0;display:grid;grid-template-columns:1fr 1fr;gap:48px;border-top:1px solid var(--line);margin-top:72px}
+@media (max-width:760px){.about{grid-template-columns:1fr;gap:28px}}
+.about p{color:var(--muted);max-width:60ch;margin-top:12px}
+.services{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.services span{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--ink)}
+.cta{display:grid;gap:16px;align-content:start}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#1a0f0a;text-decoration:none;font-weight:500;padding:14px 22px;border-radius:999px;width:fit-content}
+.btn:hover{filter:brightness(1.08)}
+.contact-lines{color:var(--muted);font-size:15px;display:grid;gap:4px}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:13px}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(8,8,8,.92);display:none;align-items:center;justify-content:center;padding:clamp(12px,4vw,48px)}
+.modal.open{display:flex}
+.modal-inner{width:min(1200px,100%);display:grid;gap:14px}
+.modal-video{position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+.modal-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.modal-info{display:flex;justify-content:space-between;align-items:start;gap:16px}
+.modal-info h3{font:700 22px/1.2 var(--display)}
+.modal-info p{color:var(--muted);font-size:15px}
+.close{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:10px 16px;font:500 14px var(--body);cursor:pointer;white-space:nowrap}
+.close:hover{border-color:var(--muted)}
+.empty-note{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);text-align:center;padding:24px;font-size:15px}
+</style>
+</head>
+<body>
+
+<!--
+  ============================================================
+  HOW TO EDIT
+  1. In Google Drive, right-click each video → Share → "Anyone with the link" (Viewer).
+  2. Copy the link and paste it into the `link` field below. Full share links are fine.
+  3. Categories: anything you like. The filter chips are built from them automatically.
+  4. Order = order on the page. Put your strongest work first.
+  ============================================================
+-->
+<script>
+const SITE = {
+  name: "shotbynels",
+  email: "hello@shotbynels.com",          // ← your email
+  instagram: "shotbynels",                 // ← handle without @ (or "" to hide)
+  location: "Melbourne, Australia",
+  showreel: "",                            // ← Drive link to your showreel
+  showreelLabel: "Showreel 2026"
+};
+
+const PROJECTS = [
+  // { title, client, category, role, year, link }
+  { title: "Brand film",        client: "Client name",   category: "Brand",    role: "Shot & edited",       year: 2026, link: "https://drive.google.com/file/d/1oDDNcZuEobh03qfhclM7FHtoZ6MrdEdo/view?usp=share_link" },
+  { title: "Product launch",    client: "Client name",   category: "Brand",    role: "Directed, shot, edit", year: 2026, link: "" },
+  { title: "Event highlights",  client: "Client name",   category: "Events",   role: "Shot & edited",       year: 2026, link: "" },
+  { title: "Conference recap",  client: "Client name",   category: "Events",   role: "Shot & edited",       year: 2025, link: "" },
+  { title: "Music video",       client: "Artist name",   category: "Music",    role: "Shot & graded",       year: 2025, link: "" },
+  { title: "Untitled — Japan",  client: "Personal",      category: "Personal", role: "Shot & edited",       year: 2025, link: "" }
+];
+</script>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#top" id="logo">shotbynels<span>.</span></a>
+    <nav aria-label="Main">
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+  <section class="intro">
+    <h1>Video for brands, events and artists.</h1>
+    <p>Shot, cut and graded in Melbourne. Start with the reel, then dig into the projects below.</p>
+  </section>
+
+  <div class="reel" id="reel"></div>
+  <div class="reel-label"><span id="reelLabel"></span><span id="reelLoc"></span></div>
+
+  <section class="work" id="work">
+    <div class="work-head">
+      <h2>Selected work</h2>
+      <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="about" id="about">
+    <div>
+      <h2>About</h2>
+      <p>I'm Nelson, the person behind shotbynels. I make short-form and long-form video for brands, events and musicians, handling the whole job from planning through to the final grade, so you deal with one person start to finish.</p>
+      <div class="services">
+        <span>Brand &amp; product films</span><span>Event coverage</span><span>Music videos</span><span>Social cutdowns</span><span>Colour grading</span>
+      </div>
+    </div>
+    <div class="cta" id="contact">
+      <h2>Got a project?</h2>
+      <a class="btn" id="mailBtn" href="#">Email me</a>
+      <div class="contact-lines" id="contactLines"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap" id="foot"></div>
+</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="modal-inner">
+    <div class="modal-video" id="mVideo"></div>
+    <div class="modal-info">
+      <div><h3 id="mTitle"></h3><p id="mSub"></p></div>
+      <button class="close" id="mClose" type="button">Close (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Pull the file ID out of any Drive link format (or accept a bare ID)
+function driveId(link){
+  if(!link) return "";
+  const m = link.match(/\/d\/([\w-]{20,})/) || link.match(/[?&]id=([\w-]{20,})/);
+  if(m) return m[1];
+  return /^[\w-]{20,}$/.test(link.trim()) ? link.trim() : "";
+}
+function embedSrc(link){
+  const v = link && link.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if(v) return `https://player.vimeo.com/video/${v[1]}?autoplay=1`;
+  const y = link && link.match(/(?:youtu\.be\/|v=)([\w-]{11})/);
+  if(y) return `https://www.youtube.com/embed/${y[1]}?autoplay=1&rel=0`;
+  const id = driveId(link);
+  return id ? `https://drive.google.com/file/d/${id}/preview` : "";
+}
+function thumbSrc(p){
+  if(p.thumb) return p.thumb;                       // optional custom thumbnail URL
+  const id = driveId(p.link);
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1280` : "";
+}
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// Reel
+const reel = document.getElementById("reel");
+const reelSrc = embedSrc(SITE.showreel).replace("?autoplay=1","").replace("&autoplay=1","");
+reel.innerHTML = reelSrc
+  ? `<iframe src="${reelSrc}" allow="autoplay; fullscreen" allowfullscreen title="${esc(SITE.showreelLabel)}"></iframe>`
+  : `<div class="empty-note"><span>Paste your showreel's Drive link into <code>SITE.showreel</code></span></div>`;
+document.getElementById("reelLabel").textContent = SITE.showreelLabel;
+document.getElementById("reelLoc").textContent = SITE.location;
+
+// Filters
+const cats = ["All", ...new Set(PROJECTS.map(p => p.category))];
+let active = "All";
+const filters = document.getElementById("filters");
+filters.innerHTML = cats.map(c => `<button class="chip" type="button" aria-pressed="${c==="All"}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+filters.addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(!b) return;
+  active = b.dataset.cat;
+  filters.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderGrid();
+});
+
+// Grid
+const grid = document.getElementById("grid");
+function renderGrid(){
+  grid.innerHTML = PROJECTS.map((p,i) => ({p,i}))
+    .filter(({p}) => active === "All" || p.category === active)
+    .map(({p,i}) => {
+      const t = thumbSrc(p);
+      return `<button class="card" type="button" data-i="${i}" aria-label="Play ${esc(p.title)}">
+        <div class="thumb">
+          ${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
+          <div class="ph" ${t ? 'style="z-index:-1"' : ""}>${t ? "" : "Add Drive link"}</div>
+          <span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z" fill="#1a0f0a"/></svg></span>
+        </div>
+        <div class="meta"><h3>${esc(p.title)}</h3><span class="cat">${esc(p.category)}</span></div>
+        <div class="sub">${esc(p.client)} · ${esc(p.role)}${p.year ? " · " + esc(p.year) : ""}</div>
+      </button>`;
+    }).join("");
+}
+renderGrid();
+
+// Modal
+const modal = document.getElementById("modal"), mVideo = document.getElementById("mVideo");
+let lastFocus = null;
+grid.addEventListener("click", e => {
+  const c = e.target.closest(".card"); if(!c) return;
+  const p = PROJECTS[c.dataset.i], src = embedSrc(p.link);
+  lastFocus = c;
+  mVideo.innerHTML = src
+    ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="${esc(p.title)}"></iframe>`
+    : `<div class="empty-note">No video linked yet. Add a Drive link for “${esc(p.title)}”.</div>`;
+  document.getElementById("mTitle").textContent = p.title;
+  document.getElementById("mSub").textContent = [p.client, p.role, p.year].filter(Boolean).join(" · ");
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  document.getElementById("mClose").focus();
+});
+function closeModal(){
+  modal.classList.remove("open"); mVideo.innerHTML = "";
+  document.body.style.overflow = ""; lastFocus && lastFocus.focus();
+}
+document.getElementById("mClose").addEventListener("click", closeModal);
+modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && modal.classList.contains("open")) closeModal(); });
+
+// Contact
+document.getElementById("mailBtn").href = `mailto:${SITE.email}?subject=${encodeURIComponent("Video project enquiry")}`;
+document.getElementById("contactLines").innerHTML =
+  `<span>${esc(SITE.email)}</span>` +
+  (SITE.instagram ? `<a href="https://instagram.com/${esc(SITE.instagram)}" target="_blank" rel="noopener">@${esc(SITE.instagram)} on Instagram</a>` : "") +
+  `<span>${esc(SITE.location)}</span>`;
+document.getElementById("foot").textContent = `© ${new Date().getFullYear()} ${SITE.name}`;
+</script>
+</body>
+</html>
