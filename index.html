@@ -5,96 +5,115 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>shotbynels — Video Portfolio</title>
 <meta name="description" content="Video work by shotbynels — brand films, events, music and personal projects. Melbourne.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* Layout: cinematic dark single page — reel up top, filterable 16:9 grid, click-to-play modal */
+/* Layout: Apple-style minimal — light, centred hero, reel that grows as you scroll, quiet grid, soft reveals */
 :root{
-  --bg:#121212;
-  --surface:#1c1b1a;
-  --line:#2e2c2a;
-  --ink:#f3efe9;
-  --muted:#9c958c;
-  --accent:#D97757;
-  --display:"Bricolage Grotesque", system-ui, sans-serif;
-  --body:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  color-scheme:dark;
+  --bg:#ffffff;
+  --alt:#f5f5f7;
+  --ink:#1d1d1f;
+  --muted:#6e6e73;
+  --line:#d2d2d7;
+  --accent:#0066cc;
+  --font:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  color-scheme:light;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
-body{background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
-a{color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
-.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.47 var(--font);letter-spacing:-.022em;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
 
-/* Header */
-header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
-.logo{font:700 20px/1 var(--display);letter-spacing:-.02em;text-decoration:none}
-.logo span{color:var(--accent)}
-nav{display:flex;gap:24px;font-size:15px}
-nav a{text-decoration:none;color:var(--muted)}
-nav a:hover{color:var(--ink)}
+/* Nav */
+header{position:fixed;inset:0 0 auto;z-index:30;height:48px;background:rgba(255,255,255,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid transparent;transition:border-color .3s var(--ease)}
+header.scrolled{border-color:rgba(0,0,0,.08)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:100%}
+.logo{font-weight:600;font-size:17px;color:var(--ink);letter-spacing:-.02em}
+.logo:hover{text-decoration:none}
+nav{display:flex;gap:28px}
+nav a{color:var(--ink);font-size:13px;opacity:.8;transition:opacity .2s}
+nav a:hover{opacity:1;text-decoration:none}
 
-/* Intro + reel */
-.intro{padding:56px 0 28px;display:grid;gap:16px}
-.intro h1{font:700 clamp(36px,6vw,72px)/1.02 var(--display);letter-spacing:-.03em;text-wrap:balance;max-width:16ch}
-.intro p{color:var(--muted);max-width:56ch;font-size:18px}
-.reel{position:relative;aspect-ratio:16/9;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+/* Hero */
+.hero{padding:140px 0 56px;text-align:center}
+.eyebrow{font-size:17px;font-weight:600;color:var(--muted);margin-bottom:10px}
+.hero h1{font-size:clamp(44px,7.5vw,88px);line-height:1.05;font-weight:700;letter-spacing:-.045em;text-wrap:balance}
+.hero p{font-size:clamp(19px,2.2vw,24px);line-height:1.35;color:var(--muted);max-width:30ch;margin:18px auto 0;text-wrap:balance}
+.hero .links{display:flex;justify-content:center;gap:28px;margin-top:26px;font-size:19px}
+.hero .links a::after{content:" ›"}
+
+/* Reel — scales up as it scrolls into view */
+.reel-stage{padding:0 clamp(16px,4vw,32px) 120px}
+.reel{position:relative;max-width:1280px;margin:0 auto;aspect-ratio:16/9;background:#000;border-radius:28px;overflow:hidden;transform:scale(var(--s,.9));transform-origin:center top;will-change:transform}
 .reel iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.reel-label{display:flex;justify-content:space-between;gap:12px;margin-top:12px;color:var(--muted);font-size:14px}
+.reel-caption{text-align:center;color:var(--muted);font-size:14px;margin-top:18px}
 
-/* Filters */
-.work{padding:72px 0 24px}
-.work-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:28px}
-h2{font:700 clamp(28px,3.5vw,40px)/1.1 var(--display);letter-spacing:-.02em}
-.filters{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font:500 14px/1 var(--body);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:10px 16px;cursor:pointer}
-.chip:hover{color:var(--ink);border-color:var(--muted)}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1a0f0a}
+/* Work */
+.work{background:var(--alt);padding:110px 0 120px}
+.section-head{text-align:center;margin-bottom:40px}
+h2{font-size:clamp(36px,5vw,56px);line-height:1.07;font-weight:700;letter-spacing:-.04em;text-wrap:balance}
+.section-head p{color:var(--muted);font-size:21px;margin-top:10px}
+.filters{display:inline-flex;gap:4px;padding:4px;background:#e8e8ed;border-radius:999px;margin:28px auto 0;position:relative;flex-wrap:wrap;justify-content:center}
+.filters-row{text-align:center;margin-bottom:48px}
+.chip{position:relative;z-index:1;font:500 14px/1 var(--font);letter-spacing:-.01em;color:var(--ink);background:transparent;border:0;border-radius:999px;padding:10px 18px;cursor:pointer;transition:color .3s var(--ease)}
+.pill{position:absolute;z-index:0;top:4px;height:calc(100% - 8px);background:#fff;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:left .45s var(--ease),width .45s var(--ease)}
 
-/* Grid */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:28px 24px}
-@media (max-width:420px){.grid{grid-template-columns:1fr}}
-.card{display:grid;gap:12px;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer}
-.thumb{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
-.thumb .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;background:linear-gradient(135deg,#24211f,#171615)}
-.thumb .play{position:absolute;left:14px;bottom:14px;width:44px;height:44px;border-radius:50%;background:var(--accent);display:grid;place-items:center;opacity:0;transform:translateY(6px);transition:.25s ease}
-.card:hover .thumb img{transform:scale(1.04)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;transition:opacity .25s var(--ease)}
+.grid.fading{opacity:0}
+@media (max-width:400px){.grid{grid-template-columns:1fr}}
+.card{display:flex;flex-direction:column;text-align:left;background:#fff;border:0;border-radius:22px;overflow:hidden;color:inherit;font:inherit;cursor:pointer;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.card:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 18px 40px rgba(0,0,0,.08)}
+.thumb{position:relative;aspect-ratio:16/9;background:linear-gradient(160deg,#e9e9ee,#dcdce2);overflow:hidden}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.card:hover .thumb img{transform:scale(1.05)}
+.thumb .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px}
+.play{position:absolute;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);display:grid;place-items:center;opacity:0;transform:scale(.85);transition:.4s var(--ease)}
 .card:hover .play,.card:focus-visible .play{opacity:1;transform:none}
-.meta{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.meta h3{font:500 18px/1.3 var(--display);letter-spacing:-.01em}
-.meta .cat{font-size:13px;color:var(--accent);white-space:nowrap}
-.sub{color:var(--muted);font-size:14px;margin-top:-6px}
+.card-body{padding:20px 22px 24px;display:grid;gap:4px}
+.cat{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.card h3{font-size:21px;font-weight:600;letter-spacing:-.025em;line-height:1.2}
+.sub{font-size:14px;color:var(--muted)}
 
-/* About + contact */
-.about{padding:80px 0;display:grid;grid-template-columns:1fr 1fr;gap:48px;border-top:1px solid var(--line);margin-top:72px}
-@media (max-width:760px){.about{grid-template-columns:1fr;gap:28px}}
-.about p{color:var(--muted);max-width:60ch;margin-top:12px}
-.services{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
-.services span{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--ink)}
-.cta{display:grid;gap:16px;align-content:start}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#1a0f0a;text-decoration:none;font-weight:500;padding:14px 22px;border-radius:999px;width:fit-content}
-.btn:hover{filter:brightness(1.08)}
-.contact-lines{color:var(--muted);font-size:15px;display:grid;gap:4px}
-footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:13px}
+/* About */
+.about{padding:130px 0;text-align:center}
+.about p{font-size:clamp(21px,2.4vw,28px);line-height:1.3;color:var(--muted);max-width:30ch;margin:20px auto 0;text-wrap:balance}
+.about p strong{color:var(--ink);font-weight:600}
+.services{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 28px;margin-top:40px;font-size:15px;color:var(--ink)}
+
+/* Contact */
+.contact{background:var(--alt);padding:120px 0;text-align:center}
+.btn{display:inline-block;margin-top:30px;background:var(--accent);color:#fff;font-size:17px;padding:13px 26px;border-radius:999px;transition:background .2s,transform .3s var(--ease)}
+.btn:hover{background:#0077ed;text-decoration:none;transform:scale(1.03)}
+.contact-lines{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px;margin-top:22px;color:var(--muted);font-size:15px}
+footer{padding:22px 0 34px;font-size:12px;color:var(--muted);border-top:1px solid #e5e5ea;background:var(--alt)}
 
 /* Modal */
-.modal{position:fixed;inset:0;z-index:50;background:rgba(8,8,8,.92);display:none;align-items:center;justify-content:center;padding:clamp(12px,4vw,48px)}
-.modal.open{display:flex}
-.modal-inner{width:min(1200px,100%);display:grid;gap:14px}
-.modal-video{position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,56px);background:rgba(0,0,0,.0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);visibility:hidden;transition:background .45s var(--ease),backdrop-filter .45s var(--ease),visibility 0s .45s}
+.modal.open{visibility:visible;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:background .45s var(--ease),backdrop-filter .45s var(--ease)}
+.modal-inner{width:min(1200px,100%);display:grid;gap:16px;opacity:0;transform:scale(.96) translateY(12px);transition:opacity .45s var(--ease),transform .55s var(--ease)}
+.modal.open .modal-inner{opacity:1;transform:none}
+.modal-video{position:relative;aspect-ratio:16/9;background:#000;border-radius:18px;overflow:hidden}
 .modal-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.modal-info{display:flex;justify-content:space-between;align-items:start;gap:16px}
-.modal-info h3{font:700 22px/1.2 var(--display)}
-.modal-info p{color:var(--muted);font-size:15px}
-.close{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:10px 16px;font:500 14px var(--body);cursor:pointer;white-space:nowrap}
-.close:hover{border-color:var(--muted)}
-.empty-note{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);text-align:center;padding:24px;font-size:15px}
+.modal-info{display:flex;justify-content:space-between;align-items:center;gap:16px;color:#f5f5f7}
+.modal-info h3{font-size:21px;font-weight:600;letter-spacing:-.02em}
+.modal-info p{color:#a1a1a6;font-size:14px}
+.close{width:40px;height:40px;flex:none;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .2s}
+.close:hover{background:rgba(255,255,255,.24)}
+.empty-note{position:absolute;inset:0;display:grid;place-items:center;color:#a1a1a6;text-align:center;padding:24px;font-size:15px}
+
+/* Scroll reveal — only hides things once JS is running, so the page is never blank */
+.js .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform 1s var(--ease);transition-delay:var(--d,0s)}
+.js .reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .js .reveal{opacity:1;transform:none}
+  .reel{transform:none}
+}
 </style>
+<script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
 
@@ -102,8 +121,9 @@ footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);f
   ============================================================
   HOW TO EDIT
   1. In Google Drive, right-click each video → Share → "Anyone with the link" (Viewer).
-  2. Copy the link and paste it into the `link` field below. Full share links are fine.
-  3. Categories: anything you like. The filter chips are built from them automatically.
+  2. Paste the link into the `link` field below. Full share links are fine.
+     Vimeo and YouTube links work too.
+  3. Categories: anything you like. The filter is built from them automatically.
   4. Order = order on the page. Put your strongest work first.
   ============================================================
 -->
@@ -128,9 +148,9 @@ const PROJECTS = [
 ];
 </script>
 
-<header>
+<header id="nav">
   <div class="wrap">
-    <a class="logo" href="#top" id="logo">shotbynels<span>.</span></a>
+    <a class="logo" href="#top">shotbynels</a>
     <nav aria-label="Main">
       <a href="#work">Work</a>
       <a href="#about">About</a>
@@ -139,118 +159,167 @@ const PROJECTS = [
   </div>
 </header>
 
-<main id="top" class="wrap">
-  <section class="intro">
-    <h1>Video for brands, events and artists.</h1>
-    <p>Shot, cut and graded in Melbourne. Start with the reel, then dig into the projects below.</p>
+<main id="top">
+  <section class="hero wrap">
+    <div class="eyebrow reveal">shotbynels</div>
+    <h1 class="reveal" style="--d:.08s">Stories, shot&nbsp;beautifully.</h1>
+    <p class="reveal" style="--d:.16s">Video for brands, events and artists. Made in Melbourne.</p>
+    <div class="links reveal" style="--d:.24s"><a href="#work">View work</a><a href="#contact">Get in touch</a></div>
   </section>
 
-  <div class="reel" id="reel"></div>
-  <div class="reel-label"><span id="reelLabel"></span><span id="reelLoc"></span></div>
+  <section class="reel-stage">
+    <div class="reel" id="reel"></div>
+    <div class="reel-caption" id="reelCaption"></div>
+  </section>
 
   <section class="work" id="work">
-    <div class="work-head">
-      <h2>Selected work</h2>
-      <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>Selected work.</h2>
+        <p>A few favourites, client and personal.</p>
+      </div>
+      <div class="filters-row reveal" style="--d:.1s">
+        <div class="filters" id="filters" role="group" aria-label="Filter by category"><span class="pill" id="pill"></span></div>
+      </div>
+      <div class="grid" id="grid"></div>
     </div>
-    <div class="grid" id="grid"></div>
   </section>
 
-  <section class="about" id="about">
-    <div>
-      <h2>About</h2>
-      <p>I'm Nelson, the person behind shotbynels. I make short-form and long-form video for brands, events and musicians, handling the whole job from planning through to the final grade, so you deal with one person start to finish.</p>
-      <div class="services">
-        <span>Brand &amp; product films</span><span>Event coverage</span><span>Music videos</span><span>Social cutdowns</span><span>Colour grading</span>
-      </div>
+  <section class="about wrap" id="about">
+    <h2 class="reveal">One person. Start to finish.</h2>
+    <p class="reveal" style="--d:.1s">I'm Nelson. I plan, shoot, edit and grade every project myself, so <strong>what you brief is what you get.</strong></p>
+    <div class="services reveal" style="--d:.2s">
+      <span>Brand &amp; product films</span><span>Event coverage</span><span>Music videos</span><span>Social cutdowns</span><span>Colour grading</span>
     </div>
-    <div class="cta" id="contact">
-      <h2>Got a project?</h2>
-      <a class="btn" id="mailBtn" href="#">Email me</a>
-      <div class="contact-lines" id="contactLines"></div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <h2 class="reveal">Let's make something.</h2>
+      <a class="btn reveal" style="--d:.1s" id="mailBtn" href="#">Email me</a>
+      <div class="contact-lines reveal" style="--d:.18s" id="contactLines"></div>
     </div>
   </section>
 </main>
 
-<footer>
-  <div class="wrap" id="foot"></div>
-</footer>
+<footer><div class="wrap" id="foot"></div></footer>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="modal-inner">
     <div class="modal-video" id="mVideo"></div>
     <div class="modal-info">
       <div><h3 id="mTitle"></h3><p id="mSub"></p></div>
-      <button class="close" id="mClose" type="button">Close (Esc)</button>
+      <button class="close" id="mClose" type="button" aria-label="Close video">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
     </div>
   </div>
 </div>
 
 <script>
-// Pull the file ID out of any Drive link format (or accept a bare ID)
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ---- Link helpers: Drive, Vimeo, YouTube ----
 function driveId(link){
   if(!link) return "";
   const m = link.match(/\/d\/([\w-]{20,})/) || link.match(/[?&]id=([\w-]{20,})/);
   if(m) return m[1];
   return /^[\w-]{20,}$/.test(link.trim()) ? link.trim() : "";
 }
-function embedSrc(link){
+function embedSrc(link, autoplay=true){
   const v = link && link.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if(v) return `https://player.vimeo.com/video/${v[1]}?autoplay=1`;
+  if(v) return `https://player.vimeo.com/video/${v[1]}${autoplay?"?autoplay=1":""}`;
   const y = link && link.match(/(?:youtu\.be\/|v=)([\w-]{11})/);
-  if(y) return `https://www.youtube.com/embed/${y[1]}?autoplay=1&rel=0`;
+  if(y) return `https://www.youtube.com/embed/${y[1]}?rel=0${autoplay?"&autoplay=1":""}`;
   const id = driveId(link);
   return id ? `https://drive.google.com/file/d/${id}/preview` : "";
 }
 function thumbSrc(p){
-  if(p.thumb) return p.thumb;                       // optional custom thumbnail URL
+  if(p.thumb) return p.thumb;
   const id = driveId(p.link);
   return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1280` : "";
 }
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-// Reel
+// ---- Reel ----
 const reel = document.getElementById("reel");
-const reelSrc = embedSrc(SITE.showreel).replace("?autoplay=1","").replace("&autoplay=1","");
+const reelSrc = embedSrc(SITE.showreel, false);
 reel.innerHTML = reelSrc
   ? `<iframe src="${reelSrc}" allow="autoplay; fullscreen" allowfullscreen title="${esc(SITE.showreelLabel)}"></iframe>`
   : `<div class="empty-note"><span>Paste your showreel's Drive link into <code>SITE.showreel</code></span></div>`;
-document.getElementById("reelLabel").textContent = SITE.showreelLabel;
-document.getElementById("reelLoc").textContent = SITE.location;
+document.getElementById("reelCaption").textContent = `${SITE.showreelLabel} · ${SITE.location}`;
 
-// Filters
+// ---- Scroll: nav border + reel grows from 90% to 100% ----
+const nav = document.getElementById("nav");
+let ticking = false;
+function onScroll(){
+  nav.classList.toggle("scrolled", scrollY > 8);
+  if(!reduceMotion){
+    const r = reel.getBoundingClientRect(), vh = innerHeight;
+    const t = Math.min(1, Math.max(0, (vh - r.top) / (vh * .75)));
+    reel.style.setProperty("--s", (0.9 + 0.1 * t).toFixed(4));
+  }
+  ticking = false;
+}
+addEventListener("scroll", () => { if(!ticking){ ticking = true; requestAnimationFrame(onScroll); } }, {passive:true});
+addEventListener("resize", onScroll);
+onScroll();
+
+// ---- Reveal on scroll ----
+const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+}, {threshold:.12, rootMargin:"0px 0px -40px 0px"}) : null;
+function watch(els){ els.forEach(el => io ? io.observe(el) : el.classList.add("in")); }
+watch(document.querySelectorAll(".reveal"));
+
+// ---- Filters with sliding pill ----
 const cats = ["All", ...new Set(PROJECTS.map(p => p.category))];
 let active = "All";
-const filters = document.getElementById("filters");
-filters.innerHTML = cats.map(c => `<button class="chip" type="button" aria-pressed="${c==="All"}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+const filters = document.getElementById("filters"), pill = document.getElementById("pill");
+filters.insertAdjacentHTML("beforeend", cats.map(c =>
+  `<button class="chip" type="button" aria-pressed="${c==="All"}" data-cat="${esc(c)}">${esc(c)}</button>`).join(""));
+function movePill(){
+  const b = filters.querySelector('.chip[aria-pressed="true"]');
+  pill.style.left = b.offsetLeft + "px"; pill.style.width = b.offsetWidth + "px"; pill.style.top = b.offsetTop + "px";
+}
 filters.addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if(!b) return;
+  const b = e.target.closest(".chip"); if(!b || b.dataset.cat === active) return;
   active = b.dataset.cat;
   filters.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
-  renderGrid();
+  movePill();
+  if(reduceMotion){ renderGrid(); return; }
+  grid.classList.add("fading");
+  setTimeout(() => { renderGrid(); grid.classList.remove("fading"); }, 250);
 });
+addEventListener("resize", movePill);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(movePill);
+movePill();
 
-// Grid
+// ---- Grid ----
 const grid = document.getElementById("grid");
 function renderGrid(){
   grid.innerHTML = PROJECTS.map((p,i) => ({p,i}))
     .filter(({p}) => active === "All" || p.category === active)
-    .map(({p,i}) => {
+    .map(({p,i}, n) => {
       const t = thumbSrc(p);
-      return `<button class="card" type="button" data-i="${i}" aria-label="Play ${esc(p.title)}">
+      return `<button class="card reveal" style="--d:${(n % 3) * 0.08}s" type="button" data-i="${i}" aria-label="Play ${esc(p.title)}">
         <div class="thumb">
+          ${t ? "" : `<div class="ph">Add a Drive link</div>`}
           ${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
-          <div class="ph" ${t ? 'style="z-index:-1"' : ""}>${t ? "" : "Add Drive link"}</div>
-          <span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z" fill="#1a0f0a"/></svg></span>
+          <span class="play" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z" fill="#1d1d1f"/></svg></span>
         </div>
-        <div class="meta"><h3>${esc(p.title)}</h3><span class="cat">${esc(p.category)}</span></div>
-        <div class="sub">${esc(p.client)} · ${esc(p.role)}${p.year ? " · " + esc(p.year) : ""}</div>
+        <div class="card-body">
+          <span class="cat">${esc(p.category)}</span>
+          <h3>${esc(p.title)}</h3>
+          <span class="sub">${esc(p.client)} · ${esc(p.role)}${p.year ? " · " + esc(p.year) : ""}</span>
+        </div>
       </button>`;
     }).join("");
+  watch(grid.querySelectorAll(".reveal"));
 }
 renderGrid();
 
-// Modal
+// ---- Modal ----
 const modal = document.getElementById("modal"), mVideo = document.getElementById("mVideo");
 let lastFocus = null;
 grid.addEventListener("click", e => {
@@ -267,20 +336,22 @@ grid.addEventListener("click", e => {
   document.getElementById("mClose").focus();
 });
 function closeModal(){
-  modal.classList.remove("open"); mVideo.innerHTML = "";
-  document.body.style.overflow = ""; lastFocus && lastFocus.focus();
+  modal.classList.remove("open");
+  document.body.style.overflow = "";
+  setTimeout(() => { if(!modal.classList.contains("open")) mVideo.innerHTML = ""; }, 450);
+  lastFocus && lastFocus.focus();
 }
 document.getElementById("mClose").addEventListener("click", closeModal);
 modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
 document.addEventListener("keydown", e => { if(e.key === "Escape" && modal.classList.contains("open")) closeModal(); });
 
-// Contact
+// ---- Contact ----
 document.getElementById("mailBtn").href = `mailto:${SITE.email}?subject=${encodeURIComponent("Video project enquiry")}`;
 document.getElementById("contactLines").innerHTML =
   `<span>${esc(SITE.email)}</span>` +
-  (SITE.instagram ? `<a href="https://instagram.com/${esc(SITE.instagram)}" target="_blank" rel="noopener">@${esc(SITE.instagram)} on Instagram</a>` : "") +
+  (SITE.instagram ? `<a href="https://instagram.com/${esc(SITE.instagram)}" target="_blank" rel="noopener">@${esc(SITE.instagram)}</a>` : "") +
   `<span>${esc(SITE.location)}</span>`;
-document.getElementById("foot").textContent = `© ${new Date().getFullYear()} ${SITE.name}`;
+document.getElementById("foot").textContent = `© ${new Date().getFullYear()} ${SITE.name}. All rights reserved.`;
 </script>
 </body>
 </html>
