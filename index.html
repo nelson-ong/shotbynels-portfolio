@@ -418,9 +418,15 @@ async function loadSheet(){
       title: col(r, "title"), category: col(r, "category") || "Other", hidden: yes(col(r, "hidden")),
       thumb: col(r, "thumbnail") || undefined, ...base, videos
     };
-  }).filter(p => p.title);
+  });
   const merged = [];
   rowProjects.forEach(p => {
+    // A row with no Title adds its video(s) to the project above it
+    if(!p.title){
+      const last = merged[merged.length - 1];
+      if(last && p.videos.length) last.videos.push(...p.videos);
+      return;
+    }
     const key = p.title.toLowerCase();
     const found = merged.find(m => m.title.toLowerCase() === key);
     if(!found){ merged.push(p); return; }
