@@ -122,21 +122,23 @@ nav a:hover{color:var(--ink)}
 /* Client carousel */
 .clients-sec{padding:0 0 clamp(40px,5vw,64px)}
 .clients-head{display:flex;justify-content:space-between;color:var(--muted);padding-bottom:18px;border-bottom:1px solid var(--line)}
-.marquee{margin:0 calc(-1 * clamp(16px,3.2vw,48px));overflow:hidden;padding:26px 0;border-bottom:1px solid var(--line);
+.marquee{margin:0 calc(-1 * clamp(16px,3.2vw,48px));overflow:hidden;padding:18px 0 0;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
 .track{display:flex;align-items:center;width:max-content;animation:marquee var(--dur,40s) linear infinite}
 .marquee:hover .track{animation-play-state:paused}
 @keyframes marquee{to{transform:translateX(-50%)}}
-.client{display:flex;align-items:center;gap:clamp(28px,4vw,56px);padding-right:clamp(28px,4vw,56px);white-space:nowrap;
-  font-size:clamp(22px,2.6vw,36px);font-weight:500;letter-spacing:-.035em;color:var(--ink);transition:color .3s}
-.client::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
-.client img{height:clamp(24px,2.6vw,36px);width:auto;max-width:200px;object-fit:contain;mix-blend-mode:multiply;filter:grayscale(1) contrast(1.1);opacity:.75;transition:filter .3s,opacity .3s}
-.client:hover img{filter:none;opacity:1}
-.marquee:hover .client{color:var(--muted)}
-.marquee:hover .client:hover{color:var(--ink)}
+.still{position:relative;flex:none;height:clamp(150px,20vw,280px);aspect-ratio:16/9;margin-right:12px;overflow:hidden;background:#e2e2df;padding:0;transition:opacity .4s var(--ease)}
+.still img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1s var(--ease)}
+.still .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted)}
+.still figcaption{position:absolute;left:10px;bottom:8px;right:10px;color:#fff;font:500 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.04em;text-shadow:0 1px 8px rgba(0,0,0,.5);opacity:0;transform:translateY(6px);transition:.35s var(--ease);text-align:left}
+.marquee:hover .still{opacity:.45}
+.marquee .still:hover{opacity:1}
+.still:hover img{transform:scale(1.05)}
+.still:hover figcaption{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){
   .marquee{-webkit-mask-image:none;mask-image:none;padding:28px clamp(16px,3.2vw,48px)}
-  .track{animation:none;width:auto;flex-wrap:wrap;row-gap:12px}
+  .marquee{overflow-x:auto}
+  .track{animation:none}
   .track .dup{display:none}
 }
 
@@ -291,8 +293,8 @@ let PROJECTS = [
   </section>
 
   <section class="clients-sec rise" style="--d:.18s" id="clientsSec">
-    <div class="clients-head mono"><span>Selected clients</span><span id="clientCount"></span></div>
-    <div class="marquee" id="marquee" aria-label="Clients"><div class="track" id="track"></div></div>
+    <div class="clients-head mono"><span>Stills</span><span id="clientCount"></span></div>
+    <div class="marquee" id="marquee" aria-label="Stills from recent work"><div class="track" id="track"></div></div>
   </section>
 
   <section class="rise" style="--d:.28s">
@@ -365,7 +367,17 @@ async function loadSheet(){
   if(!id) return;
   const get = name => fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(name)}&_=${Date.now()}`)
     .then(r => { if(!r.ok) throw new Error(name + " " + r.status); return r.text(); });
-  const [projCsv, setCsv, cliCsv] = await Promise.all([get("Projects"), get("Settings").catch(() => ""), get("Clients").catch(() => "")]);
+  const [projCsv, setCsv, cliCsv, stCsv] = await Promise.all([get("Projects"), get("Settings").catch(() => ""), get("Clients").catch(() => ""), get("Stills").catch(() => "")]);
+  const sRows = parseCSV(stCsv);
+  if(sRows.length > 1){
+    const sh = sRows.shift().map(h => h.trim().toLowerCase());
+    const si = n => sh.indexOf(n);
+    if(si("image") > -1){
+      const list = sRows.map(r => ({ image: (r[si("image")] ?? "").trim(), caption: (r[si("caption")] ?? "").trim(), project: (r[si("project")] ?? "").trim() }))
+                        .filter(x => x.image);
+      if(list.length) SITE.stills = list;
+    }
+  }
   const cRows = parseCSV(cliCsv);
   if(cRows.length > 1){
     const ch = cRows.shift().map(h => h.trim().toLowerCase());
@@ -532,26 +544,42 @@ function render(){
 }
 render();
 
-// ---- Client carousel: Clients tab in the Sheet, or client names from PROJECTS ----
+// ---- Stills carousel: Stills tab in the Sheet, or frames from your project videos ----
 (function(){
-  let items = Array.isArray(SITE.clients) && SITE.clients.length ? SITE.clients
-    : [...new Set(shown.map(p => p.client).filter(c => c && !/^personal$/i.test(c)))].map(name => ({name}));
+  const imgSrc = l => { const id = driveId(l); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : l; };
+  let items;
+  if(Array.isArray(SITE.stills) && SITE.stills.length){
+    items = SITE.stills.map(x => {
+      const p = x.project ? PROJECTS.findIndex(q => q.title.toLowerCase() === x.project.toLowerCase()) : -1;
+      return { src: imgSrc(x.image), caption: x.caption || (p > -1 ? PROJECTS[p].title : ""), i: p };
+    });
+  } else {
+    items = [];
+    shown.forEach(p => {
+      if(p.thumb) items.push({ src: p.thumb, caption: p.title, i: p.i });
+      vids(p).forEach(v => { const id = driveId(v.link); if(id) items.push({ src: imgSrc(id), caption: v.label || p.title, i: p.i }); });
+    });
+    // drop exact duplicates
+    items = items.filter((x, k) => items.findIndex(y => y.src === x.src) === k);
+  }
   const sec = document.getElementById("clientsSec");
   if(!items.length){ sec.remove(); return; }
   document.getElementById("clientCount").textContent = pad(items.length);
-  const logoSrc = l => { const id = driveId(l); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w600` : l; };
-  const one = items.map(c => `<span class="client">${c.logo
-      ? `<img src="${esc(logoSrc(c.logo))}" alt="${esc(c.name)}" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode(this.alt))">`
-      : esc(c.name)}</span>`).join("");
+  const one = items.map(x => {
+    const inner = `<img src="${esc(x.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ""}`;
+    return x.i > -1
+      ? `<button type="button" class="still" data-i="${x.i}" aria-label="Play ${esc(x.caption)}">${inner}</button>`
+      : `<figure class="still">${inner}</figure>`;
+  }).join("");
   const track = document.getElementById("track");
   track.innerHTML = `<div style="display:flex" class="grp">${one}</div>`;
-  // repeat until one half is wider than the screen, then double it for a seamless loop
   const grp = track.firstElementChild;
   let guard = 0;
   while(grp.scrollWidth < innerWidth * 1.2 && guard++ < 20) grp.insertAdjacentHTML("beforeend", one);
-  track.insertAdjacentHTML("beforeend", `<div style="display:flex" class="grp dup" aria-hidden="true">${grp.innerHTML}</div>`);
-  const setDur = () => track.style.setProperty("--dur", Math.max(15, grp.scrollWidth / 70) + "s");
+  track.insertAdjacentHTML("beforeend", `<div style="display:flex" class="grp dup" aria-hidden="true">${grp.innerHTML.replace(/<button /g, '<button tabindex="-1" ')}</div>`);
+  const setDur = () => track.style.setProperty("--dur", Math.max(20, grp.scrollWidth / 45) + "s");
   setDur(); addEventListener("load", setDur);
+  sec.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b); });
 })();
 
 // ---- Cursor-follow preview in list view ----
