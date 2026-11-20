@@ -5,221 +5,410 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>shotbynels — Video Portfolio</title>
 <meta name="description" content="Video work by shotbynels — brand films, events, music and personal projects. Melbourne.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* Layout: Apple-style minimal — light, centred hero, reel that grows as you scroll, quiet grid, soft reveals */
+/* Layout: quiet editorial index — numbered project list with a cursor-following preview, switchable to a grid */
 :root{
-  --bg:#ffffff;
-  --alt:#f5f5f7;
-  --ink:#1d1d1f;
-  --muted:#6e6e73;
-  --line:#d2d2d7;
-  --accent:#0066cc;
-  --font:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --ease:cubic-bezier(.22,.61,.36,1);
+  --bg:#f2f2f0;
+  --ink:#141414;
+  --muted:#8a8a86;
+  --line:#d9d9d5;
+  --accent:#D97757;
+  --sans:"Geist", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono:"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
   color-scheme:light;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--ink);font:400 17px/1.47 var(--font);letter-spacing:-.022em;-webkit-font-smoothing:antialiased}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
-.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--ink);outline-offset:4px}
+.wrap{padding:0 clamp(16px,3.2vw,48px)}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.02em;text-transform:uppercase}
 
-/* Nav */
-header{position:fixed;inset:0 0 auto;z-index:30;height:48px;background:rgba(255,255,255,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid transparent;transition:border-color .3s var(--ease)}
-header.scrolled{border-color:rgba(0,0,0,.08)}
-header .wrap{display:flex;align-items:center;justify-content:space-between;height:100%}
-.logo{font-weight:600;font-size:17px;color:var(--ink);letter-spacing:-.02em}
-.logo:hover{text-decoration:none}
-nav{display:flex;gap:28px}
-nav a{color:var(--ink);font-size:13px;opacity:.8;transition:opacity .2s}
-nav a:hover{opacity:1;text-decoration:none}
+/* Header */
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+header .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;gap:16px}
+.logo{font-weight:600;letter-spacing:-.02em}
+.logo i{font-style:normal;color:var(--accent)}
+.status{color:var(--muted);display:flex;align-items:center;gap:8px}
+.status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+nav{display:flex;justify-content:flex-end;gap:24px}
+nav a{color:var(--muted);transition:color .2s}
+nav a:hover{color:var(--ink)}
+@media (max-width:640px){.status{display:none}header .wrap{grid-template-columns:1fr auto}}
 
 /* Hero */
-.hero{padding:140px 0 56px;text-align:center}
-.eyebrow{font-size:17px;font-weight:600;color:var(--muted);margin-bottom:10px}
-.hero h1{font-size:clamp(44px,7.5vw,88px);line-height:1.05;font-weight:700;letter-spacing:-.045em;text-wrap:balance}
-.hero p{font-size:clamp(19px,2.2vw,24px);line-height:1.35;color:var(--muted);max-width:30ch;margin:18px auto 0;text-wrap:balance}
-.hero .links{display:flex;justify-content:center;gap:28px;margin-top:26px;font-size:19px}
-.hero .links a::after{content:" ›"}
+.hero{padding:clamp(56px,12vw,150px) 0 clamp(40px,6vw,72px);display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.hero h1{grid-column:1 / span 10;font-size:clamp(34px,5.4vw,80px);line-height:1.02;font-weight:500;letter-spacing:-.045em;text-wrap:balance}
+.hero h1 .g{color:var(--muted)}
+/* 1. Headline: words slide up out of a mask */
+.hero h1 .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
+.hero h1 .wi{display:inline-block}
+.js .hero h1 .wi{transform:translateY(110%);transition:transform 1.1s cubic-bezier(.16,1,.3,1);transition-delay:calc(var(--i) * 28ms)}
+.js .hero h1.go .wi{transform:none}
+.hero .meta{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px 40px;color:var(--muted);margin-top:24px}
+@media (max-width:760px){.hero h1{grid-column:1 / -1}}
 
-/* Reel — scales up as it scrolls into view */
-.reel-stage{padding:0 clamp(16px,4vw,32px) 120px}
-.reel{position:relative;max-width:1280px;margin:0 auto;aspect-ratio:16/9;background:#000;border-radius:28px;overflow:hidden;transform:scale(var(--s,.9));transform-origin:center top;will-change:transform}
+/* Reel — 4. starts inset, opens to full width as you scroll */
+.reel-bleed{margin:0 calc(-1 * clamp(16px,3.2vw,48px))}
+.reel{position:relative;aspect-ratio:16/9;background:#111;overflow:hidden;clip-path:inset(var(--iy,0px) var(--ix,clamp(16px,3.2vw,48px)) round var(--r,2px));will-change:clip-path}
 .reel iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.reel-caption{text-align:center;color:var(--muted);font-size:14px;margin-top:18px}
+.reel-cap{display:flex;justify-content:space-between;padding:12px 0 0;color:var(--muted)}
 
 /* Work */
-.work{background:var(--alt);padding:110px 0 120px}
-.section-head{text-align:center;margin-bottom:40px}
-h2{font-size:clamp(36px,5vw,56px);line-height:1.07;font-weight:700;letter-spacing:-.04em;text-wrap:balance}
-.section-head p{color:var(--muted);font-size:21px;margin-top:10px}
-.filters{display:inline-flex;gap:4px;padding:4px;background:#e8e8ed;border-radius:999px;margin:28px auto 0;position:relative;flex-wrap:wrap;justify-content:center}
-.filters-row{text-align:center;margin-bottom:48px}
-.chip{position:relative;z-index:1;font:500 14px/1 var(--font);letter-spacing:-.01em;color:var(--ink);background:transparent;border:0;border-radius:999px;padding:10px 18px;cursor:pointer;transition:color .3s var(--ease)}
-.pill{position:absolute;z-index:0;top:4px;height:calc(100% - 8px);background:#fff;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:left .45s var(--ease),width .45s var(--ease)}
+.work{padding:clamp(80px,10vw,140px) 0 40px}
+.work-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:20px;padding-bottom:18px;border-bottom:1px solid var(--ink)}
+.work-bar h2{font-size:clamp(24px,2.6vw,34px);font-weight:500;letter-spacing:-.03em}
+.controls{display:flex;flex-wrap:wrap;gap:12px 36px;align-items:center}
+.filters,.views{display:flex;flex-wrap:wrap;gap:4px 18px}
+.f{color:var(--muted);transition:color .2s;padding:4px 0}
+.f sup{font-size:9px;margin-left:2px}
+.f:hover,.f[aria-pressed="true"]{color:var(--ink)}
+.f[aria-pressed="true"]{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;transition:opacity .25s var(--ease)}
-.grid.fading{opacity:0}
-@media (max-width:400px){.grid{grid-template-columns:1fr}}
-.card{display:flex;flex-direction:column;text-align:left;background:#fff;border:0;border-radius:22px;overflow:hidden;color:inherit;font:inherit;cursor:pointer;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
-.card:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 18px 40px rgba(0,0,0,.08)}
-.thumb{position:relative;aspect-ratio:16/9;background:linear-gradient(160deg,#e9e9ee,#dcdce2);overflow:hidden}
-.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
-.card:hover .thumb img{transform:scale(1.05)}
-.thumb .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px}
-.play{position:absolute;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);display:grid;place-items:center;opacity:0;transform:scale(.85);transition:.4s var(--ease)}
-.card:hover .play,.card:focus-visible .play{opacity:1;transform:none}
-.card-body{padding:20px 22px 24px;display:grid;gap:4px}
-.cat{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.card h3{font-size:21px;font-weight:600;letter-spacing:-.025em;line-height:1.2}
-.sub{font-size:14px;color:var(--muted)}
+.list{list-style:none}
+.row{display:grid;grid-template-columns:56px 1.4fr 1fr .8fr 64px;gap:16px;align-items:baseline;width:100%;text-align:left;padding:22px 0;border-bottom:1px solid var(--line);transition:color .3s var(--ease),padding .35s var(--ease)}
+.row .t{font-size:clamp(18px,1.7vw,24px);letter-spacing:-.025em;font-weight:500}
+.row .c{color:var(--muted)}
+.row .y{text-align:right}
+.list:hover .row{color:var(--muted)}
+.list .row:hover{color:var(--ink);padding-left:12px}
+.list .row:hover .c{color:var(--ink)}
+@media (max-width:760px){
+  .row{grid-template-columns:40px 1fr auto;row-gap:2px}
+  .row .k{display:none}
+  .row .c{grid-column:2}
+  .row .y{grid-row:1;grid-column:3}
+}
 
-/* About */
-.about{padding:130px 0;text-align:center}
-.about p{font-size:clamp(21px,2.4vw,28px);line-height:1.3;color:var(--muted);max-width:30ch;margin:20px auto 0;text-wrap:balance}
-.about p strong{color:var(--ink);font-weight:600}
-.services{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 28px;margin-top:40px;font-size:15px;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:40px 20px;padding-top:28px}
+.tile{display:grid;gap:10px;text-align:left}
+.tile .img{position:relative;aspect-ratio:16/10;background:#e2e2df;overflow:hidden}
+.tile .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(.15);transition:transform .9s var(--ease),filter .5s}
+.tile:hover .img img{transform:scale(1.04);filter:none}
+.row .n{font-size:11px;color:var(--muted);margin-left:12px;vertical-align:middle;letter-spacing:.02em}
+.badge{position:absolute;left:10px;top:10px;background:rgba(242,242,240,.92);padding:4px 8px;font-size:11px}
+.strip{display:flex;flex-wrap:wrap;gap:6px 22px;border-top:1px solid var(--line);padding-top:12px}
+.strip button{color:var(--muted);padding:2px 0;transition:color .2s}
+.strip button:hover,.strip button[aria-pressed="true"]{color:var(--ink)}
+.strip button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.strip button sup{font-size:9px;margin-right:4px}
+.tile .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted)}
+.tile .cap{display:flex;justify-content:space-between;gap:12px}
+.tile .cap b{font-weight:500;letter-spacing:-.015em}
+.tile .cap span{color:var(--muted)}
+.tile .sub{color:var(--muted);margin-top:-6px}
+[hidden]{display:none!important}
 
-/* Contact */
-.contact{background:var(--alt);padding:120px 0;text-align:center}
-.btn{display:inline-block;margin-top:30px;background:var(--accent);color:#fff;font-size:17px;padding:13px 26px;border-radius:999px;transition:background .2s,transform .3s var(--ease)}
-.btn:hover{background:#0077ed;text-decoration:none;transform:scale(1.03)}
-.contact-lines{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px;margin-top:22px;color:var(--muted);font-size:15px}
-footer{padding:22px 0 34px;font-size:12px;color:var(--muted);border-top:1px solid #e5e5ea;background:var(--alt)}
+/* Cursor preview (index view, desktop only) */
+.preview{position:fixed;left:0;top:0;z-index:25;width:340px;aspect-ratio:16/10;pointer-events:none;overflow:hidden;background:#ddd;opacity:0;transform:translate(-50%,-50%) scale(.92);transition:opacity .3s var(--ease),transform .4s var(--ease)}
+.preview.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.preview img{width:100%;height:100%;object-fit:cover}
+.preview .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted)}
+@media (hover:none),(max-width:760px){.preview{display:none}}
+
+/* Clients */
+.clients{padding:clamp(80px,10vw,130px) 0 0;display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.clients .label{grid-column:1 / span 3;color:var(--muted)}
+.clients p{grid-column:4 / -1;font-size:clamp(22px,2.6vw,38px);line-height:1.2;letter-spacing:-.03em;font-weight:500;text-wrap:balance}
+.clients p span{color:var(--muted)}
+@media (max-width:760px){.clients .label,.clients p{grid-column:1 / -1}}
+
+/* Client carousel */
+.clients-sec{padding:0 0 clamp(40px,5vw,64px)}
+.clients-head{display:flex;justify-content:space-between;color:var(--muted);padding-bottom:18px;border-bottom:1px solid var(--line)}
+.marquee{margin:0 calc(-1 * clamp(16px,3.2vw,48px));overflow:hidden;padding:26px 0;border-bottom:1px solid var(--line);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.track{display:flex;align-items:center;width:max-content;animation:marquee var(--dur,40s) linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+@keyframes marquee{to{transform:translateX(-50%)}}
+.client{display:flex;align-items:center;gap:clamp(28px,4vw,56px);padding-right:clamp(28px,4vw,56px);white-space:nowrap;
+  font-size:clamp(22px,2.6vw,36px);font-weight:500;letter-spacing:-.035em;color:var(--ink);transition:color .3s}
+.client::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.client img{height:clamp(24px,2.6vw,36px);width:auto;max-width:200px;object-fit:contain;mix-blend-mode:multiply;filter:grayscale(1) contrast(1.1);opacity:.75;transition:filter .3s,opacity .3s}
+.client:hover img{filter:none;opacity:1}
+.marquee:hover .client{color:var(--muted)}
+.marquee:hover .client:hover{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){
+  .marquee{-webkit-mask-image:none;mask-image:none;padding:28px clamp(16px,3.2vw,48px)}
+  .track{animation:none;width:auto;flex-wrap:wrap;row-gap:12px}
+  .track .dup{display:none}
+}
+
+/* About / contact */
+.about{padding:clamp(80px,10vw,130px) 0;display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.about .label{grid-column:1 / span 3;color:var(--muted)}
+.about .body{grid-column:4 / span 6;display:grid;gap:18px}
+.about .body p{font-size:19px;line-height:1.5;max-width:52ch}
+.about ul{list-style:none;display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--muted)}
+@media (max-width:760px){.about .label,.about .body{grid-column:1 / -1}}
+
+.contact{border-top:1px solid var(--ink);padding:40px 0 28px}
+.big-mail{display:inline-block;font-size:clamp(34px,7vw,104px);line-height:1;letter-spacing:-.05em;font-weight:500;position:relative}
+.big-mail::after{content:"";position:absolute;left:0;bottom:-6px;height:2px;width:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .6s var(--ease)}
+.big-mail:hover::after{transform:scaleX(1)}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;color:var(--muted);margin-top:56px}
+.foot a:hover{color:var(--ink)}
 
 /* Modal */
-.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,56px);background:rgba(0,0,0,.0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);visibility:hidden;transition:background .45s var(--ease),backdrop-filter .45s var(--ease),visibility 0s .45s}
-.modal.open{visibility:visible;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:background .45s var(--ease),backdrop-filter .45s var(--ease)}
-.modal-inner{width:min(1200px,100%);display:grid;gap:16px;opacity:0;transform:scale(.96) translateY(12px);transition:opacity .45s var(--ease),transform .55s var(--ease)}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,56px);background:rgba(242,242,240,0);visibility:hidden;transition:background .4s var(--ease),visibility 0s .4s}
+.modal.open{visibility:visible;background:rgba(242,242,240,.97);transition:background .4s var(--ease)}
+.modal-inner{width:min(1240px,100%);display:grid;gap:14px;opacity:0;transform:translateY(16px);transition:opacity .4s var(--ease),transform .5s var(--ease)}
 .modal.open .modal-inner{opacity:1;transform:none}
-.modal-video{position:relative;aspect-ratio:16/9;background:#000;border-radius:18px;overflow:hidden}
+.modal-video{position:relative;aspect-ratio:16/9;background:#111}
 .modal-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.modal-info{display:flex;justify-content:space-between;align-items:center;gap:16px;color:#f5f5f7}
-.modal-info h3{font-size:21px;font-weight:600;letter-spacing:-.02em}
-.modal-info p{color:#a1a1a6;font-size:14px}
-.close{width:40px;height:40px;flex:none;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .2s}
-.close:hover{background:rgba(255,255,255,.24)}
-.empty-note{position:absolute;inset:0;display:grid;place-items:center;color:#a1a1a6;text-align:center;padding:24px;font-size:15px}
+.modal-info{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.modal-info h3{font-size:22px;font-weight:500;letter-spacing:-.025em}
+.modal-info p{color:var(--muted)}
+.modal-info .desc{color:var(--ink);font-size:15px;max-width:60ch;margin-top:8px}
+.modal-info .desc:empty{display:none}
+.close{color:var(--muted);transition:color .2s;white-space:nowrap}
+.close:hover{color:var(--ink)}
+.empty-note{position:absolute;inset:0;display:grid;place-items:center;color:#8a8a86;text-align:center;padding:24px}
 
-/* Scroll reveal — only hides things once JS is running, so the page is never blank */
-.js .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform 1s var(--ease);transition-delay:var(--d,0s)}
-.js .reveal.in{opacity:1;transform:none}
+/* 6. Page-load curtain */
+.curtain{display:none}
+.js .curtain{position:fixed;inset:0;z-index:100;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;justify-content:space-between;padding:clamp(16px,3.2vw,48px);transition:transform 1s cubic-bezier(.77,0,.18,1)}
+.curtain .cl{font-size:clamp(40px,8vw,120px);font-weight:500;letter-spacing:-.05em;line-height:1;margin-top:auto;opacity:0;transform:translateY(20px);animation:cIn .8s cubic-bezier(.16,1,.3,1) .1s forwards}
+.curtain .cl i{font-style:normal;color:var(--accent)}
+.curtain .mono{color:#8a8a86;display:flex;justify-content:space-between;margin-top:24px}
+.curtain.up{transform:translateY(-100%)}
+.curtain-done .curtain{display:none!important}
+@keyframes cIn{to{opacity:1;transform:none}}
+
+/* 3. Custom cursor */
+.cursor{display:none}
+@media (hover:hover) and (pointer:fine){
+  html.has-cursor body, html.has-cursor a, html.has-cursor button{cursor:none}
+  .has-cursor .cursor{display:grid;place-items:center;position:fixed;left:0;top:0;z-index:95;pointer-events:none;width:10px;height:10px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);transition:width .4s cubic-bezier(.16,1,.3,1),height .4s cubic-bezier(.16,1,.3,1),background .3s,border-color .3s,opacity .25s;border:1px solid transparent}
+  .cursor span{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#fff;opacity:0;transition:opacity .2s}
+  .cursor.play{width:86px;height:86px}
+  .cursor.play span{opacity:1;transition-delay:.1s}
+  .cursor.link{width:34px;height:34px;background:transparent;border-color:var(--ink)}
+  .cursor.off{opacity:0}
+}
+
+/* 7. Smooth scroll (Lenis) */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+
+/* Load-in — content is visible if JS fails */
+.js .rise{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1s var(--ease);transition-delay:var(--d,0s)}
+.js .rise.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  *,*::before,*::after{transition:none!important;animation:none!important}
-  .js .reveal{opacity:1;transform:none}
-  .reel{transform:none}
+  *,*::before,*::after{transition:none!important}
+  .js .rise{opacity:1;transform:none}
+  .js .hero h1 .wi{transform:none}
+  .js .curtain{display:none}
 }
 </style>
-<script>document.documentElement.classList.add("js")</script>
+<script>document.documentElement.classList.add("js");setTimeout(()=>document.documentElement.classList.add("curtain-done"),5000)</script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js"></script>
 </head>
 <body>
+<div class="curtain" id="curtain" aria-hidden="true">
+  <div class="cl">shotbynels<i>.</i></div>
+  <div class="mono"><span id="curtainLoc">Melbourne</span><span>Loading work</span></div>
+</div>
+<div class="cursor" id="cursor" aria-hidden="true"><span>Play</span></div>
 
 <!--
   ============================================================
   HOW TO EDIT
   1. In Google Drive, right-click each video → Share → "Anyone with the link" (Viewer).
-  2. Paste the link into the `link` field below. Full share links are fine.
-     Vimeo and YouTube links work too.
-  3. Categories: anything you like. The filter is built from them automatically.
-  4. Order = order on the page. Put your strongest work first.
+  2. Paste the link into `link`. Drive, Vimeo and YouTube links all work.
+  3. `category` = type of work (Brand, Events, Music…). Filters are built from these.
+  4. `client` = who it was for. The "Selected clients" list is built from these
+     automatically (anything marked "Personal" is left out).
+  5. Order = order on the page. Strongest first.
+  6. Too many projects? Add `hidden: true` to keep one in the file but off the page.
+  7. More than one video for a project? Use `videos` instead of `link`:
+       videos: [
+         { label: "Hero film",      link: "https://drive.google.com/…" },
+         { label: "Instagram cut",  link: "https://drive.google.com/…" },
+         { label: "BTS",            link: "https://drive.google.com/…" }
+       ]
+     The first video is the thumbnail and plays first. The rest show as tabs under the player.
   ============================================================
 -->
 <script>
-const SITE = {
+// ★ Paste your Google Sheet link here (Share → Anyone with the link → Viewer).
+//   Once it's set, edit the Sheet and the site updates. The SITE/PROJECTS below
+//   are only a backup, used if the Sheet can't be reached.
+const SHEET_URL = "";
+
+let SITE = {
   name: "shotbynels",
-  email: "hello@shotbynels.com",          // ← your email
+  email: "nelsononggg@gmail.com",          // ← your email
   instagram: "shotbynels",                 // ← handle without @ (or "" to hide)
   location: "Melbourne, Australia",
   showreel: "",                            // ← Drive link to your showreel
-  showreelLabel: "Showreel 2026"
+  showreelLabel: "Showreel 2026",
+  available: "",                           // ← small status in the header (or "" to hide)
+  headline: "Nelson is a videographer making films for brands, events and artists.",
+  headlineGrey: "Shot, cut and graded in Melbourne.",
+  tagline: "Direction · Camera · Edit · Colour",
+  about: "shotbynels is me, Nelson. I take a project from planning to final grade on my own, so the person you brief is the person holding the camera and cutting the edit.",
+  services: "Brand & product, Events, Music videos, Social cutdowns, Colour",
+  contactHeading: "Start a project"
 };
 
-const PROJECTS = [
+let PROJECTS = [
   // { title, client, category, role, year, link }
-  { title: "Brand film",        client: "Client name",   category: "Brand",    role: "Shot & edited",       year: 2026, link: "https://drive.google.com/file/d/1oDDNcZuEobh03qfhclM7FHtoZ6MrdEdo/view?usp=share_link" },
+  { title: "Brand film",        client: "Client name",   category: "Brand",    role: "Shot & edited",       year: 2026, desc: "", link: "https://drive.google.com/file/d/1oDDNcZuEobh03qfhclM7FHtoZ6MrdEdo/view?usp=share_link" },
   { title: "Product launch",    client: "Client name",   category: "Brand",    role: "Directed, shot, edit", year: 2026, link: "" },
-  { title: "Event highlights",  client: "Client name",   category: "Events",   role: "Shot & edited",       year: 2026, link: "" },
+  { title: "Event highlights",  client: "Client name",   category: "Events",   role: "Shot & edited",       year: 2026,
+    videos: [
+      { label: "Highlights", link: "" },
+      { label: "Reel cut",   link: "" },
+      { label: "Speaker recap", link: "" }
+    ] },
   { title: "Conference recap",  client: "Client name",   category: "Events",   role: "Shot & edited",       year: 2025, link: "" },
   { title: "Music video",       client: "Artist name",   category: "Music",    role: "Shot & graded",       year: 2025, link: "" },
   { title: "Untitled — Japan",  client: "Personal",      category: "Personal", role: "Shot & edited",       year: 2025, link: "" }
 ];
 </script>
 
-<header id="nav">
+<header>
   <div class="wrap">
-    <a class="logo" href="#top">shotbynels</a>
-    <nav aria-label="Main">
-      <a href="#work">Work</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
-    </nav>
+    <a class="logo" href="#top">shotbynels<i>.</i></a>
+    <span class="status mono" id="status"></span>
+    <nav class="mono" aria-label="Main"><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
   </div>
 </header>
 
-<main id="top">
-  <section class="hero wrap">
-    <div class="eyebrow reveal">shotbynels</div>
-    <h1 class="reveal" style="--d:.08s">Stories, shot&nbsp;beautifully.</h1>
-    <p class="reveal" style="--d:.16s">Video for brands, events and artists. Made in Melbourne.</p>
-    <div class="links reveal" style="--d:.24s"><a href="#work">View work</a><a href="#contact">Get in touch</a></div>
+<main id="top" class="wrap">
+  <section class="hero">
+    <h1 id="headline"></h1>
+    <div class="meta mono rise" style="--d:.12s"><span id="count"></span><span id="tagline"></span><span id="loc"></span></div>
   </section>
 
-  <section class="reel-stage">
-    <div class="reel" id="reel"></div>
-    <div class="reel-caption" id="reelCaption"></div>
+  <section class="clients-sec rise" style="--d:.18s" id="clientsSec">
+    <div class="clients-head mono"><span>Selected clients</span><span id="clientCount"></span></div>
+    <div class="marquee" id="marquee" aria-label="Clients"><div class="track" id="track"></div></div>
+  </section>
+
+  <section class="rise" style="--d:.28s">
+    <div class="reel-bleed"><div class="reel" id="reel"></div></div>
+    <div class="reel-cap mono"><span id="reelLabel"></span><span>Sound on</span></div>
   </section>
 
   <section class="work" id="work">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <h2>Selected work.</h2>
-        <p>A few favourites, client and personal.</p>
+    <div class="work-bar">
+      <h2>Index</h2>
+      <div class="controls mono">
+        <div class="filters" id="filters" role="group" aria-label="Filter by type of work"></div>
+        <div class="views" role="group" aria-label="View">
+          <button class="f" type="button" data-view="list" aria-pressed="true">List</button>
+          <button class="f" type="button" data-view="grid" aria-pressed="false">Grid</button>
+        </div>
       </div>
-      <div class="filters-row reveal" style="--d:.1s">
-        <div class="filters" id="filters" role="group" aria-label="Filter by category"><span class="pill" id="pill"></span></div>
-      </div>
-      <div class="grid" id="grid"></div>
     </div>
+    <ol class="list" id="list"></ol>
+    <div class="grid" id="grid" hidden></div>
   </section>
 
-  <section class="about wrap" id="about">
-    <h2 class="reveal">One person. Start to finish.</h2>
-    <p class="reveal" style="--d:.1s">I'm Nelson. I plan, shoot, edit and grade every project myself, so <strong>what you brief is what you get.</strong></p>
-    <div class="services reveal" style="--d:.2s">
-      <span>Brand &amp; product films</span><span>Event coverage</span><span>Music videos</span><span>Social cutdowns</span><span>Colour grading</span>
+
+  <section class="about" id="about">
+    <div class="label mono">About</div>
+    <div class="body">
+      <div id="aboutText" style="display:grid;gap:14px"></div>
+      <ul class="mono" id="services"></ul>
     </div>
   </section>
 
   <section class="contact" id="contact">
-    <div class="wrap">
-      <h2 class="reveal">Let's make something.</h2>
-      <a class="btn reveal" style="--d:.1s" id="mailBtn" href="#">Email me</a>
-      <div class="contact-lines reveal" style="--d:.18s" id="contactLines"></div>
-    </div>
+    <div class="mono" id="contactHeading" style="color:var(--muted);margin-bottom:18px"></div>
+    <a class="big-mail" id="mail" href="#"></a>
+    <div class="foot mono"><span id="copy"></span><span id="ig"></span><a href="#top">Back to top ↑</a></div>
   </section>
 </main>
 
-<footer><div class="wrap" id="foot"></div></footer>
+<div class="preview" id="preview" aria-hidden="true"></div>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="modal-inner">
     <div class="modal-video" id="mVideo"></div>
+    <div class="strip mono" id="mStrip" role="group" aria-label="Videos in this project" hidden></div>
     <div class="modal-info">
-      <div><h3 id="mTitle"></h3><p id="mSub"></p></div>
-      <button class="close" id="mClose" type="button" aria-label="Close video">
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </button>
+      <div><h3 id="mTitle"></h3><p class="mono" id="mSub"></p><p class="desc" id="mDesc"></p></div>
+      <button class="close mono" id="mClose" type="button">Close ✕</button>
     </div>
   </div>
 </div>
 
 <script>
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// ---- Link helpers: Drive, Vimeo, YouTube ----
+// ---- Google Sheet loader ----
+function parseCSV(t){
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=""; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&t[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=""; }
+    else cell+=c;
+  }
+  if(cell!==""||row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== ""));
+}
+async function loadSheet(){
+  const id = (SHEET_URL.match(/\/d\/([\w-]{20,})/) || [])[1];
+  if(!id) return;
+  const get = name => fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(name)}&_=${Date.now()}`)
+    .then(r => { if(!r.ok) throw new Error(name + " " + r.status); return r.text(); });
+  const [projCsv, setCsv, cliCsv] = await Promise.all([get("Projects"), get("Settings").catch(() => ""), get("Clients").catch(() => "")]);
+  const cRows = parseCSV(cliCsv);
+  if(cRows.length > 1){
+    const ch = cRows.shift().map(h => h.trim().toLowerCase());
+    const ci = n => ch.indexOf(n);
+    const list = cRows.map(r => ({ name: (r[ci("name")] ?? "").trim(), logo: (r[ci("logo")] ?? "").trim() }))
+                      .filter(c => c.name || c.logo);
+    if(list.length && ci("name") > -1) SITE.clients = list;
+  }
+
+  const rows = parseCSV(projCsv);
+  const head = rows.shift().map(h => h.trim().toLowerCase());
+  const col = (r, name) => (r[head.indexOf(name)] ?? "").trim();
+  const yes = v => /^(yes|y|true|x|hide|hidden)$/i.test(v);
+  const projects = rows.map(r => {
+    const videos = [];
+    for(let n = 1; n <= 10; n++){
+      const link = col(r, `video ${n}`);
+      if(link) videos.push({ label: col(r, `label ${n}`) || (n === 1 ? col(r, "title") : `Part ${n}`), link });
+    }
+    return {
+      title: col(r, "title"), client: col(r, "client"), category: col(r, "category") || "Other",
+      role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), hidden: yes(col(r, "hidden")),
+      thumb: col(r, "thumbnail") || undefined, videos
+    };
+  }).filter(p => p.title);
+  if(projects.length) PROJECTS = projects;
+
+  const keys = { "email":"email", "instagram":"instagram", "location":"location", "showreel":"showreel",
+                 "showreel label":"showreelLabel", "status":"available", "name":"name",
+                 "headline":"headline", "headline (grey)":"headlineGrey", "tagline":"tagline",
+                 "about":"about", "services":"services", "contact heading":"contactHeading", "project count":"projectCount" };
+  parseCSV(setCsv).slice(1).forEach(([k, v = ""]) => {
+    const key = keys[(k || "").trim().toLowerCase()];
+    if(key) SITE[key] = v.trim().replace(/^@/, "");
+  });
+}
+
+function boot(){
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+
+// ---- Links: Drive, Vimeo, YouTube ----
 function driveId(link){
   if(!link) return "";
   const m = link.match(/\/d\/([\w-]{20,})/) || link.match(/[?&]id=([\w-]{20,})/);
@@ -234,111 +423,202 @@ function embedSrc(link, autoplay=true){
   const id = driveId(link);
   return id ? `https://drive.google.com/file/d/${id}/preview` : "";
 }
+// A project's videos: either `videos: [...]` or a single `link`
+function vids(p){
+  if(Array.isArray(p.videos) && p.videos.length) return p.videos.map((v,n) => ({label: v.label || `Part ${n+1}`, link: v.link || ""}));
+  return [{label: p.title, link: p.link || ""}];
+}
 function thumbSrc(p){
   if(p.thumb) return p.thumb;
-  const id = driveId(p.link);
+  const id = driveId(vids(p)[0].link);
   return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1280` : "";
 }
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const shown = PROJECTS.map((p,i) => ({...p, i})).filter(p => !p.hidden);
+
+// ---- Page text (from Settings) ----
+const h1 = document.getElementById("headline");
+{
+  let n = 0;
+  const words = (txt, cls) => String(txt || "").split(/\s+/).filter(Boolean)
+    .map(w => `<span class="w"><span class="wi ${cls}" style="--i:${n++}">${esc(w)}</span></span>`).join(" ");
+  h1.innerHTML = words(SITE.headline, "") + (SITE.headlineGrey ? " " + words(SITE.headlineGrey, "g") : "");
+  h1.setAttribute("aria-label", [SITE.headline, SITE.headlineGrey].filter(Boolean).join(" "));
+}
+document.getElementById("tagline").textContent = SITE.tagline || "";
+document.getElementById("aboutText").innerHTML = String(SITE.about || "").split(/\n\s*\n|\n/).filter(x => x.trim())
+  .map(x => `<p>${esc(x.trim())}</p>`).join("");
+document.getElementById("services").innerHTML = String(SITE.services || "").split(",").map(x => x.trim()).filter(Boolean)
+  .map(x => `<li>${esc(x)}</li>`).join("");
+document.getElementById("contactHeading").textContent = SITE.contactHeading || "Start a project";
+
+// ---- Header + hero bits ----
+document.getElementById("status").textContent = SITE.available || "";
+if(!SITE.available) document.getElementById("status").remove();
+// 5. Project counter (Settings → Project count, e.g. "40+", or the number of projects shown)
+const countEl = document.getElementById("count");
+const cm = String(SITE.projectCount || "").match(/^(\d+)(.*)$/);
+const countTarget = cm ? +cm[1] : shown.length, countSuffix = cm ? cm[2] : "";
+const fmtCount = v => `${cm ? v : pad(v)}${countSuffix} projects`;
+countEl.textContent = fmtCount(reduceMotion ? countTarget : 0);
+function runCounter(){
+  if(reduceMotion) return;
+  const t0 = performance.now(), dur = 1400;
+  (function step(t){
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    countEl.textContent = fmtCount(Math.round(countTarget * e));
+    if(k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+document.getElementById("loc").textContent = SITE.location;
+document.getElementById("reelLabel").textContent = SITE.showreelLabel;
 
 // ---- Reel ----
-const reel = document.getElementById("reel");
 const reelSrc = embedSrc(SITE.showreel, false);
-reel.innerHTML = reelSrc
+document.getElementById("reel").innerHTML = reelSrc
   ? `<iframe src="${reelSrc}" allow="autoplay; fullscreen" allowfullscreen title="${esc(SITE.showreelLabel)}"></iframe>`
-  : `<div class="empty-note"><span>Paste your showreel's Drive link into <code>SITE.showreel</code></span></div>`;
-document.getElementById("reelCaption").textContent = `${SITE.showreelLabel} · ${SITE.location}`;
+  : `<div class="empty-note mono"><span>Paste your showreel link into SITE.showreel</span></div>`;
 
-// ---- Scroll: nav border + reel grows from 90% to 100% ----
-const nav = document.getElementById("nav");
-let ticking = false;
-function onScroll(){
-  nav.classList.toggle("scrolled", scrollY > 8);
-  if(!reduceMotion){
-    const r = reel.getBoundingClientRect(), vh = innerHeight;
-    const t = Math.min(1, Math.max(0, (vh - r.top) / (vh * .75)));
-    reel.style.setProperty("--s", (0.9 + 0.1 * t).toFixed(4));
-  }
-  ticking = false;
-}
-addEventListener("scroll", () => { if(!ticking){ ticking = true; requestAnimationFrame(onScroll); } }, {passive:true});
-addEventListener("resize", onScroll);
-onScroll();
-
-// ---- Reveal on scroll ----
-const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
-}, {threshold:.12, rootMargin:"0px 0px -40px 0px"}) : null;
-function watch(els){ els.forEach(el => io ? io.observe(el) : el.classList.add("in")); }
-watch(document.querySelectorAll(".reveal"));
-
-// ---- Filters with sliding pill ----
-const cats = ["All", ...new Set(PROJECTS.map(p => p.category))];
+// ---- Filters ----
+const cats = ["All", ...new Set(shown.map(p => p.category))];
+const countFor = c => c === "All" ? shown.length : shown.filter(p => p.category === c).length;
 let active = "All";
-const filters = document.getElementById("filters"), pill = document.getElementById("pill");
-filters.insertAdjacentHTML("beforeend", cats.map(c =>
-  `<button class="chip" type="button" aria-pressed="${c==="All"}" data-cat="${esc(c)}">${esc(c)}</button>`).join(""));
-function movePill(){
-  const b = filters.querySelector('.chip[aria-pressed="true"]');
-  pill.style.left = b.offsetLeft + "px"; pill.style.width = b.offsetWidth + "px"; pill.style.top = b.offsetTop + "px";
-}
+const filters = document.getElementById("filters");
+filters.innerHTML = cats.map(c =>
+  `<button class="f" type="button" data-cat="${esc(c)}" aria-pressed="${c==="All"}">${esc(c)}<sup>${countFor(c)}</sup></button>`).join("");
 filters.addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if(!b || b.dataset.cat === active) return;
+  const b = e.target.closest("[data-cat]"); if(!b) return;
   active = b.dataset.cat;
-  filters.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
-  movePill();
-  if(reduceMotion){ renderGrid(); return; }
-  grid.classList.add("fading");
-  setTimeout(() => { renderGrid(); grid.classList.remove("fading"); }, 250);
+  filters.querySelectorAll("[data-cat]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
 });
-addEventListener("resize", movePill);
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(movePill);
-movePill();
 
-// ---- Grid ----
-const grid = document.getElementById("grid");
-function renderGrid(){
-  grid.innerHTML = PROJECTS.map((p,i) => ({p,i}))
-    .filter(({p}) => active === "All" || p.category === active)
-    .map(({p,i}, n) => {
-      const t = thumbSrc(p);
-      return `<button class="card reveal" style="--d:${(n % 3) * 0.08}s" type="button" data-i="${i}" aria-label="Play ${esc(p.title)}">
-        <div class="thumb">
-          ${t ? "" : `<div class="ph">Add a Drive link</div>`}
-          ${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
-          <span class="play" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z" fill="#1d1d1f"/></svg></span>
-        </div>
-        <div class="card-body">
-          <span class="cat">${esc(p.category)}</span>
-          <h3>${esc(p.title)}</h3>
-          <span class="sub">${esc(p.client)} · ${esc(p.role)}${p.year ? " · " + esc(p.year) : ""}</span>
-        </div>
-      </button>`;
-    }).join("");
-  watch(grid.querySelectorAll(".reveal"));
+// ---- Views ----
+let view = "list";
+document.querySelector(".views").addEventListener("click", e => {
+  const b = e.target.closest("[data-view]"); if(!b) return;
+  view = b.dataset.view;
+  document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+});
+
+// ---- Render list + grid ----
+const list = document.getElementById("list"), grid = document.getElementById("grid");
+function render(){
+  const items = shown.filter(p => active === "All" || p.category === active);
+  list.hidden = view !== "list"; grid.hidden = view !== "grid";
+  list.innerHTML = items.map((p,n) => `
+    <li><button class="row" type="button" data-i="${p.i}" aria-label="Play ${esc(p.title)}">
+      <span class="mono">${pad(n+1)}</span>
+      <span class="t">${esc(p.title)}${vids(p).length > 1 ? `<span class="n mono">${vids(p).length} films</span>` : ""}</span>
+      <span class="c">${esc(p.client)}</span>
+      <span class="k mono">${esc(p.category)}</span>
+      <span class="y mono">${esc(p.year ?? "")}</span>
+    </button></li>`).join("");
+  grid.innerHTML = items.map(p => {
+    const t = thumbSrc(p);
+    return `<button class="tile" type="button" data-i="${p.i}" aria-label="Play ${esc(p.title)}">
+      <div class="img">${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : `<div class="ph mono">No thumbnail</div>`}${vids(p).length > 1 ? `<span class="badge mono">${vids(p).length} films</span>` : ""}</div>
+      <div class="cap"><b>${esc(p.title)}</b><span class="mono">${esc(p.year ?? "")}</span></div>
+      <div class="sub">${esc(p.client)} · ${esc(p.role)}</div>
+    </button>`;
+  }).join("");
+  if(!reduceMotion){
+    [...list.children, ...grid.children].forEach((el,n) => {
+      el.animate([{opacity:0, transform:"translateY(10px)"},{opacity:1, transform:"none"}],
+        {duration:600, delay:Math.min(n,12)*40, easing:"cubic-bezier(.2,.7,.2,1)", fill:"backwards"});
+    });
+  }
 }
-renderGrid();
+render();
+
+// ---- Client carousel: Clients tab in the Sheet, or client names from PROJECTS ----
+(function(){
+  let items = Array.isArray(SITE.clients) && SITE.clients.length ? SITE.clients
+    : [...new Set(shown.map(p => p.client).filter(c => c && !/^personal$/i.test(c)))].map(name => ({name}));
+  const sec = document.getElementById("clientsSec");
+  if(!items.length){ sec.remove(); return; }
+  document.getElementById("clientCount").textContent = pad(items.length);
+  const logoSrc = l => { const id = driveId(l); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w600` : l; };
+  const one = items.map(c => `<span class="client">${c.logo
+      ? `<img src="${esc(logoSrc(c.logo))}" alt="${esc(c.name)}" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode(this.alt))">`
+      : esc(c.name)}</span>`).join("");
+  const track = document.getElementById("track");
+  track.innerHTML = `<div style="display:flex" class="grp">${one}</div>`;
+  // repeat until one half is wider than the screen, then double it for a seamless loop
+  const grp = track.firstElementChild;
+  let guard = 0;
+  while(grp.scrollWidth < innerWidth * 1.2 && guard++ < 20) grp.insertAdjacentHTML("beforeend", one);
+  track.insertAdjacentHTML("beforeend", `<div style="display:flex" class="grp dup" aria-hidden="true">${grp.innerHTML}</div>`);
+  const setDur = () => track.style.setProperty("--dur", Math.max(15, grp.scrollWidth / 70) + "s");
+  setDur(); addEventListener("load", setDur);
+})();
+
+// ---- Cursor-follow preview in list view ----
+const preview = document.getElementById("preview");
+let tx = 0, ty = 0, cx = 0, cy = 0, raf = null, current = -1;
+function loop(){
+  cx += (tx - cx) * (reduceMotion ? 1 : .14);
+  cy += (ty - cy) * (reduceMotion ? 1 : .14);
+  preview.style.left = cx + "px"; preview.style.top = cy + "px";
+  raf = Math.abs(tx-cx) + Math.abs(ty-cy) > .3 ? requestAnimationFrame(loop) : null;
+}
+list.addEventListener("mousemove", e => {
+  tx = e.clientX + 200; ty = e.clientY;
+  if(tx + 180 > innerWidth) tx = e.clientX - 200;
+  if(!raf) raf = requestAnimationFrame(loop);
+  const r = e.target.closest(".row");
+  if(r && +r.dataset.i !== current){
+    current = +r.dataset.i;
+    const t = thumbSrc(PROJECTS[current]);
+    preview.innerHTML = t ? `<img src="${t}" alt="" referrerpolicy="no-referrer">` : `<div class="ph mono">${esc(PROJECTS[current].title)}</div>`;
+  }
+  preview.classList.toggle("on", !!r);
+});
+list.addEventListener("mouseenter", e => { cx = tx = e.clientX + 200; cy = ty = e.clientY; });
+list.addEventListener("mouseleave", () => { preview.classList.remove("on"); current = -1; });
 
 // ---- Modal ----
 const modal = document.getElementById("modal"), mVideo = document.getElementById("mVideo");
 let lastFocus = null;
-grid.addEventListener("click", e => {
-  const c = e.target.closest(".card"); if(!c) return;
-  const p = PROJECTS[c.dataset.i], src = embedSrc(p.link);
-  lastFocus = c;
+const mStrip = document.getElementById("mStrip");
+let openVids = [];
+function playVid(n){
+  const v = openVids[n], src = embedSrc(v.link);
   mVideo.innerHTML = src
-    ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="${esc(p.title)}"></iframe>`
-    : `<div class="empty-note">No video linked yet. Add a Drive link for “${esc(p.title)}”.</div>`;
+    ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="${esc(v.label)}"></iframe>`
+    : `<div class="empty-note mono">No video linked yet for “${esc(v.label)}”</div>`;
+  if(!reduceMotion) mVideo.animate([{opacity:0},{opacity:1}], {duration:400, easing:"ease-out"});
+  mStrip.querySelectorAll("button").forEach((b,k) => b.setAttribute("aria-pressed", k === n));
+}
+mStrip.addEventListener("click", e => {
+  const b = e.target.closest("[data-v]"); if(b && b.getAttribute("aria-pressed") !== "true") playVid(+b.dataset.v);
+});
+function openProject(i, from){
+  const p = PROJECTS[i];
+  lastFocus = from;
+  openVids = vids(p);
+  mStrip.hidden = openVids.length < 2;
+  mStrip.innerHTML = openVids.map((v,n) =>
+    `<button type="button" data-v="${n}" aria-pressed="false"><sup>${pad(n+1)}</sup>${esc(v.label)}</button>`).join("");
+  playVid(0);
   document.getElementById("mTitle").textContent = p.title;
   document.getElementById("mSub").textContent = [p.client, p.role, p.year].filter(Boolean).join(" · ");
+  document.getElementById("mDesc").textContent = p.desc || "";
+  preview.classList.remove("on");
   modal.classList.add("open");
+  window.__lenis && window.__lenis.stop();
   document.body.style.overflow = "hidden";
   document.getElementById("mClose").focus();
+}
+document.getElementById("work").addEventListener("click", e => {
+  const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b);
 });
 function closeModal(){
   modal.classList.remove("open");
+  window.__lenis && window.__lenis.start();
   document.body.style.overflow = "";
-  setTimeout(() => { if(!modal.classList.contains("open")) mVideo.innerHTML = ""; }, 450);
+  setTimeout(() => { if(!modal.classList.contains("open")) mVideo.innerHTML = ""; }, 400);
   lastFocus && lastFocus.focus();
 }
 document.getElementById("mClose").addEventListener("click", closeModal);
@@ -346,12 +626,91 @@ modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
 document.addEventListener("keydown", e => { if(e.key === "Escape" && modal.classList.contains("open")) closeModal(); });
 
 // ---- Contact ----
-document.getElementById("mailBtn").href = `mailto:${SITE.email}?subject=${encodeURIComponent("Video project enquiry")}`;
-document.getElementById("contactLines").innerHTML =
-  `<span>${esc(SITE.email)}</span>` +
-  (SITE.instagram ? `<a href="https://instagram.com/${esc(SITE.instagram)}" target="_blank" rel="noopener">@${esc(SITE.instagram)}</a>` : "") +
-  `<span>${esc(SITE.location)}</span>`;
-document.getElementById("foot").textContent = `© ${new Date().getFullYear()} ${SITE.name}. All rights reserved.`;
+const mail = document.getElementById("mail");
+mail.textContent = SITE.email;
+mail.href = `mailto:${SITE.email}?subject=${encodeURIComponent("Video project enquiry")}`;
+document.getElementById("copy").textContent = `© ${new Date().getFullYear()} ${SITE.name}`;
+SITE.instagram = String(SITE.instagram || "").replace(/^@/, "");
+if(SITE.instagram) document.getElementById("ig").innerHTML = `<a href="https://instagram.com/${esc(SITE.instagram)}" target="_blank" rel="noopener">Instagram ↗</a>`;
+
+// ---- 4. Showreel opens up as you scroll ----
+const reelEl = document.getElementById("reel");
+function reelScroll(){
+  const g = parseFloat(getComputedStyle(document.querySelector("main")).paddingLeft) || 16;
+  if(reduceMotion){ reelEl.style.setProperty("--ix", g + "px"); return; }
+  const r = reelEl.getBoundingClientRect(), vh = innerHeight;
+  const t = Math.min(1, Math.max(0, 1 - (r.top - vh * .08) / (vh * .7)));
+  const ix = (1 - t) * (g + innerWidth * .05);
+  reelEl.style.setProperty("--ix", ix.toFixed(1) + "px");
+  reelEl.style.setProperty("--iy", (ix * 9 / 16).toFixed(1) + "px");
+  reelEl.style.setProperty("--r", ((1 - t) * 14).toFixed(1) + "px");
+}
+let reelTick = false;
+addEventListener("scroll", () => { if(!reelTick){ reelTick = true; requestAnimationFrame(() => { reelScroll(); reelTick = false; }); } }, {passive:true});
+addEventListener("resize", reelScroll);
+reelScroll();
+
+// ---- 7. Smooth scrolling ----
+if(window.Lenis && !reduceMotion){
+  const lenis = new Lenis({ lerp: .09, wheelMultiplier: 1 });
+  window.__lenis = lenis;
+  (function raf(t){ lenis.raf(t); requestAnimationFrame(raf); })(performance.now());
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href^="#"]'); if(!a) return;
+    const id = a.getAttribute("href");
+    const el = id === "#top" ? 0 : document.querySelector(id);
+    if(el === null) return;
+    e.preventDefault();
+    lenis.scrollTo(el, { offset: -60, duration: 1.4 });
+  });
+}
+
+// ---- 3. Custom cursor ----
+if(matchMedia("(hover:hover) and (pointer:fine)").matches && !reduceMotion){
+  document.documentElement.classList.add("has-cursor");
+  const cur = document.getElementById("cursor");
+  let mx = -100, my = -100, px = -100, py = -100;
+  addEventListener("mousemove", e => { mx = e.clientX; my = e.clientY; }, {passive:true});
+  (function follow(){
+    px += (mx - px) * .22; py += (my - py) * .22;
+    cur.style.left = px + "px"; cur.style.top = py + "px";
+    requestAnimationFrame(follow);
+  })();
+  document.addEventListener("mouseover", e => {
+    const t = e.target;
+    const overVideo = t.tagName === "IFRAME" || t.closest(".reel, .modal-video");
+    cur.classList.toggle("off", !!overVideo);
+    cur.classList.toggle("play", !overVideo && !!t.closest("[data-i]"));
+    cur.classList.toggle("link", !overVideo && !t.closest("[data-i]") && !!t.closest("a, button"));
+  });
+  document.addEventListener("mouseleave", () => cur.classList.add("off"));
+  document.addEventListener("mouseenter", () => cur.classList.remove("off"));
+}
+
+// ---- 6. Curtain → 1. headline → reveals + 5. counter ----
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => {
+  if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+}), {threshold:.1}) : null;
+function startPage(){
+  h1.classList.add("go");
+  document.querySelectorAll(".rise").forEach(el => io ? io.observe(el) : el.classList.add("in"));
+  setTimeout(runCounter, 400);
+}
+const curtain = document.getElementById("curtain");
+document.getElementById("curtainLoc").textContent = SITE.location || "";
+if(reduceMotion || !curtain || document.documentElement.classList.contains("curtain-done")){
+  curtain && curtain.remove(); startPage();
+} else {
+  const wait = Math.max(0, 1100 - performance.now());
+  setTimeout(() => {
+    curtain.classList.add("up");
+    setTimeout(startPage, 350);
+    setTimeout(() => curtain.remove(), 1100);
+  }, wait);
+}
+
+}
+loadSheet().catch(e => console.warn("Sheet not loaded, using backup data:", e)).finally(boot);
 </script>
 </body>
 </html>
