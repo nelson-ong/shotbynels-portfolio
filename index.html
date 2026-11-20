@@ -77,7 +77,7 @@ nav a:hover{color:var(--ink)}
 .f[aria-pressed="true"]{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
 
 .list{list-style:none}
-.row{display:grid;grid-template-columns:56px 1.4fr 1fr .8fr 64px;gap:16px;align-items:baseline;width:100%;text-align:left;padding:22px 0;border-bottom:1px solid var(--line);transition:color .3s var(--ease),padding .35s var(--ease)}
+.row{display:grid;grid-template-columns:56px 1fr 200px 64px;gap:16px;align-items:baseline;width:100%;text-align:left;padding:22px 0;border-bottom:1px solid var(--line);transition:color .3s var(--ease),padding .35s var(--ease)}
 .row .t{font-size:clamp(18px,1.7vw,24px);letter-spacing:-.025em;font-weight:500}
 .row .c{color:var(--muted)}
 .row .y{text-align:right}
@@ -87,7 +87,6 @@ nav a:hover{color:var(--ink)}
 @media (max-width:760px){
   .row{grid-template-columns:40px 1fr auto;row-gap:2px}
   .row .k{display:none}
-  .row .c{grid-column:2}
   .row .y{grid-row:1;grid-column:3}
 }
 
@@ -529,7 +528,6 @@ function render(){
     <li><button class="row" type="button" data-i="${p.i}" aria-label="Play ${esc(p.title)}">
       <span class="mono">${pad(n+1)}</span>
       <span class="t">${esc(p.title)}${vids(p).length > 1 ? `<span class="n mono">${vids(p).length} films</span>` : ""}</span>
-      <span class="c">${esc(p.client)}</span>
       <span class="k mono">${esc(p.category)}</span>
       <span class="y mono">${esc(p.year ?? "")}</span>
     </button></li>`).join("");
@@ -538,7 +536,7 @@ function render(){
     return `<button class="tile" type="button" data-i="${p.i}" aria-label="Play ${esc(p.title)}">
       <div class="img">${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : `<div class="ph mono">No thumbnail</div>`}${vids(p).length > 1 ? `<span class="badge mono">${vids(p).length} films</span>` : ""}</div>
       <div class="cap"><b>${esc(p.title)}</b><span class="mono">${esc(p.year ?? "")}</span></div>
-      <div class="sub">${esc(p.client)} · ${esc(p.role)}</div>
+      <div class="sub">${esc(p.role)}</div>
     </button>`;
   }).join("");
   if(!reduceMotion){
