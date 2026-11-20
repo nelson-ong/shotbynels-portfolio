@@ -402,19 +402,36 @@ async function loadSheet(){
   const head = rows.shift().map(h => h.trim().toLowerCase());
   const col = (r, name) => (r[head.indexOf(name)] ?? "").trim();
   const yes = v => /^(yes|y|true|x|hide|hidden)$/i.test(v);
-  const projects = rows.map(r => {
+  // Each row can carry one video ("Video"/"Label") or several ("Video 1", "Label 1", "Client 1"…).
+  // Rows with the same Title are merged into one project, so each video can have its own client.
+  const rowProjects = rows.map(r => {
+    const base = { client: col(r, "client"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description") };
     const videos = [];
+    const single = col(r, "video");
+    if(single) videos.push({ ...base, label: col(r, "label"), link: single });
     for(let n = 1; n <= 10; n++){
       const link = col(r, `video ${n}`);
-      if(link) videos.push({ label: col(r, `label ${n}`) || (n === 1 ? col(r, "title") : `Part ${n}`), link });
+      if(link) videos.push({ ...base, label: col(r, `label ${n}`), link,
+        client: col(r, `client ${n}`) || base.client, role: col(r, `role ${n}`) || base.role });
     }
     return {
-      title: col(r, "title"), client: col(r, "client"), category: col(r, "category") || "Other",
-      role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), hidden: yes(col(r, "hidden")),
-      thumb: col(r, "thumbnail") || undefined, videos
+      title: col(r, "title"), category: col(r, "category") || "Other", hidden: yes(col(r, "hidden")),
+      thumb: col(r, "thumbnail") || undefined, ...base, videos
     };
   }).filter(p => p.title);
-  if(projects.length) PROJECTS = projects;
+  const merged = [];
+  rowProjects.forEach(p => {
+    const key = p.title.toLowerCase();
+    const found = merged.find(m => m.title.toLowerCase() === key);
+    if(!found){ merged.push(p); return; }
+    found.videos.push(...(p.videos.length ? p.videos : [{ client: p.client, role: p.role, year: p.year, desc: p.desc, label: "", link: "" }]));
+    found.hidden = found.hidden && p.hidden;
+  });
+  // label any unnamed videos: use the client name, then "Part n"
+  merged.forEach(p => p.videos.forEach((v, n) => {
+    if(!v.label) v.label = p.videos.length > 1 ? (v.client || `Part ${n+1}`) : p.title;
+  }));
+  if(merged.length) PROJECTS = merged;
 
   const keys = { "email":"email", "instagram":"instagram", "location":"location", "showreel":"showreel",
                  "showreel label":"showreelLabel", "status":"available", "name":"name",
@@ -448,7 +465,8 @@ function embedSrc(link, autoplay=true){
 }
 // A project's videos: either `videos: [...]` or a single `link`
 function vids(p){
-  if(Array.isArray(p.videos) && p.videos.length) return p.videos.map((v,n) => ({label: v.label || `Part ${n+1}`, link: v.link || ""}));
+  if(Array.isArray(p.videos) && p.videos.length)
+    return p.videos.map((v,n) => ({ ...v, label: v.label || `Part ${n+1}`, link: v.link || "" }));
   return [{label: p.title, link: p.link || ""}];
 }
 function thumbSrc(p){
@@ -628,6 +646,18 @@ function playVid(n){
     : `<div class="empty-note mono">No video linked yet for “${esc(v.label)}”</div>`;
   if(!reduceMotion) mVideo.animate([{opacity:0},{opacity:1}], {duration:400, easing:"ease-out"});
   mStrip.querySelectorAll("button").forEach((b,k) => b.setAttribute("aria-pressed", k === n));
+  showFacts(v);
+}
+let openProj = null;
+function showFacts(v){
+  const p = openProj || {};
+  const pick = k => (v && v[k] !== undefined && String(v[k]).trim() !== "") ? v[k] : p[k];
+  const el = document.getElementById("mFacts");
+  el.innerHTML = [["Client", pick("client"), "client"], ["Role", pick("role"), ""], ["Year", pick("year"), ""]]
+    .filter(([, x]) => x !== undefined && String(x).trim() !== "")
+    .map(([k, x, c]) => `<div class="${c}"><dt>${k}</dt><dd>${esc(x)}</dd></div>`).join("");
+  document.getElementById("mDesc").textContent = pick("desc") || "";
+  if(!reduceMotion) el.animate([{opacity:0, transform:"translateY(4px)"},{opacity:1, transform:"none"}], {duration:350, easing:"ease-out"});
 }
 mStrip.addEventListener("click", e => {
   const b = e.target.closest("[data-v]"); if(b && b.getAttribute("aria-pressed") !== "true") playVid(+b.dataset.v);
@@ -635,16 +665,14 @@ mStrip.addEventListener("click", e => {
 function openProject(i, from){
   const p = PROJECTS[i];
   lastFocus = from;
+  openProj = p;
   openVids = vids(p);
   mStrip.hidden = openVids.length < 2;
   mStrip.innerHTML = openVids.map((v,n) =>
     `<button type="button" data-v="${n}" aria-pressed="false"><sup>${pad(n+1)}</sup><span class="lb">${esc(v.label)}</span></button>`).join("");
   playVid(0);
   document.getElementById("mTitle").textContent = p.title;
-  document.getElementById("mFacts").innerHTML = [["Client", p.client, "client"], ["Role", p.role, ""], ["Year", p.year, ""]]
-    .filter(([, v]) => v !== undefined && String(v).trim() !== "")
-    .map(([k, v, c]) => `<div class="${c}"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("");
-  document.getElementById("mDesc").textContent = p.desc || "";
+
   preview.classList.remove("on");
   modal.classList.add("open");
   window.__lenis && window.__lenis.stop();
