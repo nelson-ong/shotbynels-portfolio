@@ -520,7 +520,7 @@ async function loadSheet(){
   const rowProjects = rows.map(r => {
     // Hidden: "yes" hides this row's video only; "all" (on the title row) hides the whole project
     const h = col(r, "hidden");
-    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format"), hidden: yes(h) };
+    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format"), hidden: yes(h), still: col(r, "still") };
     const videos = [];
     const single = col(r, "video");
     if(single) videos.push({ ...base, label: col(r, "label"), link: single });
@@ -758,7 +758,19 @@ render();
 (function(){
   const imgSrc = l => { const id = driveId(l); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : l; };
   let items;
-  if(Array.isArray(SITE.stills) && SITE.stills.length){
+  // 1) Projects tab → "Still" column: tick (or yes) a video to feature it; or paste an image link to use that frame
+  const picked = [];
+  shown.forEach(p => vids(p).forEach((v, n) => {
+    const st = String(v.still || "").trim();
+    if(!st || /^(false|no|n|0)$/i.test(st)) return;
+    const custom = /^https?:|^\//i.test(st) ? st : "";
+    const id = driveId(v.link);
+    const src = custom ? imgSrc(custom) : (id ? imgSrc(id) : "");
+    if(src) picked.push({ src, caption: (vids(p).length > 1 ? v.label : "") || p.title, i: p.i, v: n });
+  }));
+  if(picked.length){
+    items = picked;
+  } else if(Array.isArray(SITE.stills) && SITE.stills.length){
     items = SITE.stills.map(x => {
       const p = x.project ? PROJECTS.findIndex(q => q.title.toLowerCase() === x.project.toLowerCase()) : -1;
       return { src: imgSrc(x.image), caption: x.caption || (p > -1 ? PROJECTS[p].title : ""), i: p };
@@ -778,7 +790,7 @@ render();
   const one = items.map(x => {
     const inner = `<img src="${esc(x.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ""}`;
     return x.i > -1
-      ? `<button type="button" class="still" data-i="${x.i}" aria-label="Play ${esc(x.caption)}">${inner}</button>`
+      ? `<button type="button" class="still" data-i="${x.i}" data-sv="${x.v ?? 0}" aria-label="Play ${esc(x.caption)}">${inner}</button>`
       : `<figure class="still">${inner}</figure>`;
   }).join("");
   const track = document.getElementById("track");
@@ -787,7 +799,7 @@ render();
   // phones and touch screens get a swipeable strip instead of the auto-scroll loop
   if(matchMedia("(hover: none), (max-width: 760px)").matches){
     document.getElementById("marquee").classList.add("swipe");
-    sec.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b); });
+    sec.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b, +(b.dataset.sv || 0)); });
     return;
   }
   let guard = 0;
@@ -795,7 +807,7 @@ render();
   track.insertAdjacentHTML("beforeend", `<div style="display:flex" class="grp dup" aria-hidden="true">${grp.innerHTML.replace(/<button /g, '<button tabindex="-1" ')}</div>`);
   const setDur = () => track.style.setProperty("--dur", Math.max(20, grp.scrollWidth / 45) + "s");
   setDur(); addEventListener("load", setDur);
-  sec.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b); });
+  sec.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b, +(b.dataset.sv || 0)); });
 })();
 
 // ---- Cursor-follow preview in list view ----
