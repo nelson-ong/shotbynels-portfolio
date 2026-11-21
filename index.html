@@ -436,10 +436,21 @@ async function loadSheet(){
   });
   // label any unnamed videos: use the client name, then "Part n"
   // label any unnamed videos: real client name, then who's featured, then "Film 02"
-  merged.forEach(p => p.videos.forEach((v, n) => {
-    const realClient = isPersonalClient(v.client) ? "" : v.client;
-    if(!v.label) v.label = p.videos.length > 1 ? (realClient || v.featuring || `Film ${String(n+1).padStart(2, "0")}`) : p.title;
-  }));
+  merged.forEach(p => {
+    const auto = new Set();
+    p.videos.forEach((v, n) => {
+      const realClient = isPersonalClient(v.client) ? "" : v.client;
+      if(!v.label){ v.label = p.videos.length > 1 ? (realClient || v.featuring || "") : p.title; auto.add(v); }
+    });
+    // auto names that repeat (e.g. same client twice) or are empty become "Film 01", "Film 02"…
+    const counts = {};
+    p.videos.forEach(v => { if(auto.has(v)) counts[v.label] = (counts[v.label] || 0) + 1; });
+    p.videos.forEach((v, n) => {
+      if(auto.has(v) && (!v.label || counts[v.label] > 1)) v.label = `Film ${String(n+1).padStart(2, "0")}`;
+    });
+    // projects with no video links yet stay off the site until you add one
+    if(!p.videos.some(v => v.link)) p.hidden = true;
+  });
   if(merged.length) PROJECTS = merged;
 
   const keys = { "email":"email", "instagram":"instagram", "location":"location", "showreel":"showreel",
