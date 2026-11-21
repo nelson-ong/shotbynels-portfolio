@@ -64,6 +64,13 @@ nav a:hover{color:var(--ink)}
 .reel{position:relative;aspect-ratio:16/9;background:#111;overflow:hidden;clip-path:inset(var(--iy,0px) var(--ix,clamp(16px,3.2vw,48px)) round var(--r,2px));will-change:clip-path}
 .reel iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .reel-cap{display:flex;justify-content:space-between;padding:12px 0 0;color:var(--muted)}
+.reel video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
+.reel .yt-cover{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sound{color:var(--muted);display:inline-flex;align-items:center;gap:8px;transition:color .2s}
+.sound::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5}
+.sound:hover,.sound[aria-pressed="true"]{color:var(--ink)}
+.sound[aria-pressed="true"]::before{background:var(--accent);opacity:1;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.6);opacity:.5}}
 
 /* Work */
 .work{padding:clamp(80px,10vw,140px) 0 40px}
@@ -225,10 +232,24 @@ nav a:hover{color:var(--ink)}
 
 /* 6. Page-load curtain */
 .curtain{display:none}
-.js .curtain{position:fixed;inset:0;z-index:100;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;justify-content:space-between;padding:clamp(16px,3.2vw,48px);transition:transform 1s cubic-bezier(.77,0,.18,1)}
-.curtain .cl{font-size:clamp(40px,8vw,120px);font-weight:500;letter-spacing:-.05em;line-height:1;margin-top:auto;opacity:0;transform:translateY(20px);animation:cIn .8s cubic-bezier(.16,1,.3,1) .1s forwards}
+.js .curtain{position:fixed;inset:0;z-index:100;background:var(--ink);color:var(--bg);display:grid;grid-template-rows:auto 1fr auto auto;padding:clamp(16px,3.2vw,48px);transition:transform 1.05s cubic-bezier(.77,0,.18,1)}
+.curtain .c-top{display:flex;justify-content:space-between;color:#8a8a86;opacity:0;animation:cFade .6s ease .2s forwards}
+.curtain .c-mid{display:flex;align-items:center}
+.curtain .cl{overflow:hidden;padding:.06em 0 .22em;margin-bottom:-.16em}
+.curtain .cl span{display:inline-block;font-size:clamp(64px,15vw,260px);font-weight:500;letter-spacing:-.065em;line-height:.9;transform:translateY(105%);animation:cUp 1.1s cubic-bezier(.16,1,.3,1) .1s forwards}
 .curtain .cl i{font-style:normal;color:var(--accent)}
-.curtain .mono{color:#8a8a86;display:flex;justify-content:space-between;margin-top:24px}
+.curtain .c-bot{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:18px}
+.curtain .c-loc{display:grid;gap:10px;opacity:0;transform:translateY(14px);animation:cIn .9s cubic-bezier(.16,1,.3,1) .35s forwards}
+.curtain .c-city{font-size:clamp(26px,3.6vw,56px);font-weight:500;letter-spacing:-.04em;line-height:1}
+.curtain .c-coords{color:#8a8a86}
+.curtain .c-pct{font-size:clamp(48px,7vw,112px);font-weight:500;letter-spacing:-.05em;line-height:.85;font-variant-numeric:tabular-nums;opacity:0;animation:cFade .6s ease .3s forwards}
+.curtain .c-pct small{font-size:.32em;letter-spacing:0;margin-left:4px;color:#8a8a86;vertical-align:top}
+.curtain .c-bar{height:1px;background:rgba(242,242,240,.15)}
+.curtain .c-bar span{display:block;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left}
+.curtain.up .cl span{transform:translateY(-30%);transition:transform 1.05s cubic-bezier(.77,0,.18,1)}
+@keyframes cUp{to{transform:none}}
+@keyframes cFade{to{opacity:1}}
+@media (max-width:640px){.curtain .c-bot{flex-direction:column;align-items:flex-start}}
 .curtain.up{transform:translateY(-100%)}
 .curtain-done .curtain{display:none!important}
 @keyframes cIn{to{opacity:1;transform:none}}
@@ -266,9 +287,42 @@ html.lenis,html.lenis body{height:auto}
 </head>
 <body>
 <div class="curtain" id="curtain" aria-hidden="true">
-  <div class="cl">shotbynels<i>.</i></div>
-  <div class="mono"><span id="curtainLoc">Melbourne</span><span>Loading work</span></div>
+  <div class="c-top mono"><span>Video portfolio</span><span id="cClock"></span></div>
+  <div class="c-mid"><div class="cl"><span>shotbynels<i>.</i></span></div></div>
+  <div class="c-bot">
+    <div class="c-loc">
+      <div class="c-city" id="curtainLoc">Melbourne, Australia</div>
+      <div class="c-coords mono" id="cCoords">37.8136° S &nbsp; 144.9631° E</div>
+    </div>
+    <div class="c-pct"><span id="cPct">000</span><small>%</small></div>
+  </div>
+  <div class="c-bar"><span id="cBar"></span></div>
 </div>
+<script>
+// Loading counter + Melbourne clock (runs before the rest of the page)
+(function(){
+  var pct = document.getElementById("cPct"), bar = document.getElementById("cBar"), clock = document.getElementById("cClock");
+  try { clock.textContent = new Intl.DateTimeFormat("en-AU", {hour:"numeric", minute:"2-digit", timeZone:"Australia/Melbourne", timeZoneName:"short"}).format(new Date()); } catch(e) {}
+  var t0 = performance.now(), val = 0, finishing = null;
+  function draw(v){ val = v; pct.textContent = String(Math.round(v)).padStart(3, "0"); bar.style.transform = "scaleX(" + (v / 100) + ")"; }
+  function tick(t){
+    if(finishing) return;
+    var k = Math.min(1, (t - t0) / 1600);
+    draw(92 * (1 - Math.pow(1 - k, 3)));
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  window.__curtainFinish = function(cb){
+    var from = val, s = performance.now();
+    finishing = true;
+    (function end(t){
+      var k = Math.min(1, (t - s) / 320);
+      draw(from + (100 - from) * k);
+      if(k < 1) requestAnimationFrame(end); else setTimeout(cb, 120);
+    })(s);
+  };
+})();
+</script>
 <div class="cursor" id="cursor" aria-hidden="true"><span>Play</span></div>
 
 <!--
@@ -345,7 +399,7 @@ let PROJECTS = [
 
   <section class="rise" style="--d:.28s">
     <div class="reel-bleed"><div class="reel" id="reel"></div></div>
-    <div class="reel-cap mono"><span id="reelLabel"></span><span>Sound on</span></div>
+    <div class="reel-cap mono"><span id="reelLabel"></span><button class="sound" id="reelSound" type="button" aria-pressed="false" hidden>Sound off</button></div>
   </section>
 
   <section class="work" id="work">
@@ -581,11 +635,57 @@ function runCounter(){
 document.getElementById("loc").textContent = SITE.location;
 document.getElementById("reelLabel").textContent = SITE.showreelLabel;
 
-// ---- Reel ----
-const reelSrc = embedSrc(SITE.showreel, false);
-document.getElementById("reel").innerHTML = reelSrc
-  ? `<iframe src="${reelSrc}" allow="autoplay; fullscreen" allowfullscreen title="${esc(SITE.showreelLabel)}"></iframe>`
-  : `<div class="empty-note mono"><span>Paste your showreel link into SITE.showreel</span></div>`;
+// ---- Reel: autoplays muted on loop (MP4 file, YouTube or Vimeo). Drive links can't autoplay. ----
+const reelBox = document.getElementById("reel"), soundBtn = document.getElementById("reelSound");
+let reel = { type: "none" };
+(function(){
+  const link = String(SITE.showreel || "").trim();
+  const yt = link.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([\w-]{11})/);
+  const vm = link.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  const title = esc(SITE.showreelLabel);
+  if(!link){
+    reelBox.innerHTML = `<div class="empty-note mono"><span>Add your showreel link in the sheet (Settings → Showreel)</span></div>`;
+  } else if(/\.(mp4|webm|mov)(\?|#|$)/i.test(link)){
+    reelBox.innerHTML = `<video src="${esc(link)}" autoplay muted loop playsinline preload="auto" aria-label="${title}"></video>`;
+    reel = { type: "file", el: reelBox.querySelector("video") };
+  } else if(yt){
+    const id = yt[1];
+    reelBox.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="autoplay; fullscreen" title="${title}"></iframe>`;
+    reel = { type: "yt", el: reelBox.querySelector("iframe") };
+  } else if(vm){
+    reelBox.innerHTML = `<iframe src="https://player.vimeo.com/video/${vm[1]}?autoplay=1&muted=1&loop=1&autopause=0&playsinline=1&title=0&byline=0&portrait=0" allow="autoplay; fullscreen" title="${title}"></iframe>`;
+    reel = { type: "vimeo", el: reelBox.querySelector("iframe") };
+  } else {
+    const src = embedSrc(link, false);
+    reelBox.innerHTML = src
+      ? `<iframe src="${src}" allow="autoplay; fullscreen" title="${title}"></iframe>`
+      : `<div class="empty-note mono"><span>Showreel link not recognised</span></div>`;
+    reel = { type: "drive" };
+  }
+  if(["file","yt","vimeo"].includes(reel.type)) soundBtn.hidden = false;
+})();
+function reelCmd(cmd){
+  if(reel.type === "file"){
+    const v = reel.el;
+    if(cmd === "mute") v.muted = true;
+    if(cmd === "unmute"){ v.muted = false; v.play().catch(() => {}); }
+    if(cmd === "pause") v.pause();
+    if(cmd === "play") v.play().catch(() => {});
+  } else if(reel.type === "yt"){
+    const map = { mute: "mute", unmute: "unMute", pause: "pauseVideo", play: "playVideo" };
+    reel.el.contentWindow.postMessage(JSON.stringify({ event: "command", func: map[cmd], args: [] }), "*");
+  } else if(reel.type === "vimeo"){
+    const msg = cmd === "mute" ? { method: "setVolume", value: 0 } : cmd === "unmute" ? { method: "setVolume", value: 1 }
+              : cmd === "pause" ? { method: "pause" } : { method: "play" };
+    reel.el.contentWindow.postMessage(JSON.stringify(msg), "*");
+  }
+}
+soundBtn.addEventListener("click", () => {
+  const on = soundBtn.getAttribute("aria-pressed") !== "true";
+  reelCmd(on ? "unmute" : "mute");
+  soundBtn.setAttribute("aria-pressed", on);
+  soundBtn.textContent = on ? "Sound on" : "Sound off";
+});
 
 // ---- Filters ----
 const cats = ["All", ...new Set(shown.map(p => p.category))];
@@ -815,6 +915,7 @@ function openProject(i, from, startVid = 0){
 
   preview.classList.remove("on");
   modal.classList.add("open");
+  reelCmd("pause");
   window.__lenis && window.__lenis.stop();
   document.body.style.overflow = "hidden";
   if(!wasOpen) document.getElementById("mClose").focus({preventScroll:true});
@@ -824,6 +925,7 @@ document.getElementById("work").addEventListener("click", e => {
 });
 function closeModal(){
   modal.classList.remove("open");
+  reelCmd("play");
   window.__lenis && window.__lenis.start();
   document.body.style.overflow = "";
   setTimeout(() => { if(!modal.classList.contains("open")) mVideo.innerHTML = ""; }, 400);
@@ -913,15 +1015,17 @@ function startPage(){
 }
 const curtain = document.getElementById("curtain");
 document.getElementById("curtainLoc").textContent = SITE.location || "";
+if(!/melbourne/i.test(SITE.location || "")) document.getElementById("cCoords").remove();
 if(reduceMotion || !curtain || document.documentElement.classList.contains("curtain-done")){
   curtain && curtain.remove(); startPage();
 } else {
-  const wait = Math.max(0, 1100 - performance.now());
-  setTimeout(() => {
+  const wait = Math.max(0, 1500 - performance.now());
+  const lift = () => {
     curtain.classList.add("up");
-    setTimeout(startPage, 350);
-    setTimeout(() => curtain.remove(), 1100);
-  }, wait);
+    setTimeout(startPage, 380);
+    setTimeout(() => curtain.remove(), 1200);
+  };
+  setTimeout(() => window.__curtainFinish ? window.__curtainFinish(lift) : lift(), wait);
 }
 
 }
