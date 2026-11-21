@@ -750,7 +750,9 @@ function applyShape(v){
 let curProj = -1, curVid = 0;
 function playlist(){
   const list = [];
-  (currentItems.length ? currentItems : shown).forEach(p => vids(p).forEach((v, n) => list.push([p.i, n])));
+  // arrows stay inside the open project's category (e.g. Brand → only Brand videos)
+  const cat = curProj > -1 ? PROJECTS[curProj].category : null;
+  shown.filter(p => !cat || p.category === cat).forEach(p => vids(p).forEach((v, n) => list.push([p.i, n])));
   return list;
 }
 function step(dir){
