@@ -360,6 +360,7 @@ let PROJECTS = [
 <script>
 
 // ---- Google Sheet loader ----
+const isPersonalClient = c => /^\s*(personal|personal (project|work)|self|own)\s*$/i.test(c || "");
 function parseCSV(t){
   const rows=[]; let row=[], cell="", q=false;
   for(let i=0;i<t.length;i++){
@@ -405,14 +406,14 @@ async function loadSheet(){
   // Each row can carry one video ("Video"/"Label") or several ("Video 1", "Label 1", "Client 1"…).
   // Rows with the same Title are merged into one project, so each video can have its own client.
   const rowProjects = rows.map(r => {
-    const base = { client: col(r, "client"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description") };
+    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description") };
     const videos = [];
     const single = col(r, "video");
     if(single) videos.push({ ...base, label: col(r, "label"), link: single });
     for(let n = 1; n <= 10; n++){
       const link = col(r, `video ${n}`);
       if(link) videos.push({ ...base, label: col(r, `label ${n}`), link,
-        client: col(r, `client ${n}`) || base.client, role: col(r, `role ${n}`) || base.role });
+        client: col(r, `client ${n}`) || base.client, featuring: col(r, `featuring ${n}`) || base.featuring, role: col(r, `role ${n}`) || base.role });
     }
     return {
       title: col(r, "title"), category: col(r, "category") || "Other", hidden: yes(col(r, "hidden")),
@@ -430,12 +431,14 @@ async function loadSheet(){
     const key = p.title.toLowerCase();
     const found = merged.find(m => m.title.toLowerCase() === key);
     if(!found){ merged.push(p); return; }
-    found.videos.push(...(p.videos.length ? p.videos : [{ client: p.client, role: p.role, year: p.year, desc: p.desc, label: "", link: "" }]));
+    found.videos.push(...(p.videos.length ? p.videos : [{ client: p.client, featuring: p.featuring, role: p.role, year: p.year, desc: p.desc, label: "", link: "" }]));
     found.hidden = found.hidden && p.hidden;
   });
   // label any unnamed videos: use the client name, then "Part n"
+  // label any unnamed videos: real client name, then who's featured, then "Film 02"
   merged.forEach(p => p.videos.forEach((v, n) => {
-    if(!v.label) v.label = p.videos.length > 1 ? (v.client || `Part ${n+1}`) : p.title;
+    const realClient = isPersonalClient(v.client) ? "" : v.client;
+    if(!v.label) v.label = p.videos.length > 1 ? (realClient || v.featuring || `Film ${String(n+1).padStart(2, "0")}`) : p.title;
   }));
   if(merged.length) PROJECTS = merged;
 
@@ -659,7 +662,11 @@ function showFacts(v){
   const p = openProj || {};
   const pick = k => (v && v[k] !== undefined && String(v[k]).trim() !== "") ? v[k] : p[k];
   const el = document.getElementById("mFacts");
-  el.innerHTML = [["Client", pick("client"), "client"], ["Role", pick("role"), ""], ["Year", pick("year"), ""]]
+  const personal = isPersonalClient(pick("client")) || /^personal$/i.test(p.category || "");
+  const rows = personal
+    ? [["Type", "Personal work", "client"], ["Featuring", pick("featuring"), ""], ["Role", pick("role"), ""], ["Year", pick("year"), ""]]
+    : [["Client", pick("client"), "client"], ["Featuring", pick("featuring"), ""], ["Role", pick("role"), ""], ["Year", pick("year"), ""]];
+  el.innerHTML = rows
     .filter(([, x]) => x !== undefined && String(x).trim() !== "")
     .map(([k, x, c]) => `<div class="${c}"><dt>${k}</dt><dd>${esc(x)}</dd></div>`).join("");
   document.getElementById("mDesc").textContent = pick("desc") || "";
