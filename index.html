@@ -166,7 +166,21 @@ nav a:hover{color:var(--ink)}
 .modal.open{visibility:visible;background:rgba(242,242,240,.97);transition:background .4s var(--ease)}
 .modal-inner{width:min(1240px,100%);display:grid;gap:14px;opacity:0;transform:translateY(16px);transition:opacity .4s var(--ease),transform .5s var(--ease)}
 .modal.open .modal-inner{opacity:1;transform:none}
-.modal-video{position:relative;aspect-ratio:16/9;background:#111}
+.modal-video{position:relative;aspect-ratio:16/9;background:#111;transition:aspect-ratio .5s var(--ease)}
+/* Portrait & square videos: video on the left at full height, details beside it */
+.modal-inner.tall{width:auto;max-width:100%;grid-template-columns:auto minmax(240px,360px);grid-template-rows:1fr auto;column-gap:clamp(24px,4vw,56px);align-items:end}
+.modal-inner.tall .modal-video{grid-row:1 / span 2;height:min(84vh,960px);width:auto;aspect-ratio:var(--ar,9/16);max-width:calc(100vw - 480px)}
+.modal-inner.tall .strip{grid-column:2;grid-row:1;align-self:end;flex-direction:column;align-items:flex-start;gap:10px;border-top:0;padding-top:0;margin-bottom:16px}
+.modal-inner.tall .modal-info{grid-column:2;grid-row:2;flex-direction:column;gap:18px;border-top:1px solid var(--line);padding-top:16px}
+.modal-inner.tall .facts{flex-direction:column;gap:14px}
+.modal-inner.tall .close{order:-1;align-self:flex-start}
+@media (max-width:760px){
+  .modal-inner.tall{grid-template-columns:1fr;grid-template-rows:auto;justify-items:center}
+  .modal-inner.tall .modal-video{grid-row:auto;height:min(68vh,720px);max-width:100%}
+  .modal-inner.tall .strip,.modal-inner.tall .modal-info{grid-column:1;grid-row:auto;width:100%;flex-direction:row;flex-wrap:wrap}
+  .modal-inner.tall .facts{flex-direction:row}
+  .modal-inner.tall .close{order:0}
+}
 .modal-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .modal-info{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
 .modal-info h3{font-size:22px;font-weight:500;letter-spacing:-.025em}
@@ -406,14 +420,14 @@ async function loadSheet(){
   // Each row can carry one video ("Video"/"Label") or several ("Video 1", "Label 1", "Client 1"…).
   // Rows with the same Title are merged into one project, so each video can have its own client.
   const rowProjects = rows.map(r => {
-    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description") };
+    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format") };
     const videos = [];
     const single = col(r, "video");
     if(single) videos.push({ ...base, label: col(r, "label"), link: single });
     for(let n = 1; n <= 10; n++){
       const link = col(r, `video ${n}`);
       if(link) videos.push({ ...base, label: col(r, `label ${n}`), link,
-        client: col(r, `client ${n}`) || base.client, featuring: col(r, `featuring ${n}`) || base.featuring, role: col(r, `role ${n}`) || base.role });
+        client: col(r, `client ${n}`) || base.client, featuring: col(r, `featuring ${n}`) || base.featuring, role: col(r, `role ${n}`) || base.role, format: col(r, `format ${n}`) || base.format });
     }
     return {
       title: col(r, "title"), category: col(r, "category") || "Other", hidden: yes(col(r, "hidden")),
@@ -659,6 +673,45 @@ const modal = document.getElementById("modal"), mVideo = document.getElementById
 let lastFocus = null;
 const mStrip = document.getElementById("mStrip");
 let openVids = [];
+// ---- Video shape: from the sheet's Format column, otherwise measured from the Drive thumbnail ----
+const shapeCache = {};
+function formatRatio(f){
+  f = String(f || "").trim().toLowerCase();
+  if(!f) return 0;
+  if(/portrait|vertical|reel|story|tiktok|9[:x/]16/.test(f)) return 9/16;
+  if(/4[:x/]5/.test(f)) return 4/5;
+  if(/square|1[:x/]1/.test(f)) return 1;
+  if(/landscape|horizontal|wide|16[:x/]9/.test(f)) return 16/9;
+  const m = f.match(/^(\d+(?:\.\d+)?)\s*[:x/]\s*(\d+(?:\.\d+)?)$/);
+  return m ? (+m[1] / +m[2]) : 0;
+}
+function videoRatio(v){
+  const fixed = formatRatio(v.format);
+  if(fixed) return Promise.resolve(fixed);
+  const id = driveId(v.link);
+  if(!id) return Promise.resolve(16/9);
+  if(shapeCache[id]) return Promise.resolve(shapeCache[id]);
+  return new Promise(res => {
+    const img = new Image();
+    img.referrerPolicy = "no-referrer";
+    const done = r => { shapeCache[id] = r; res(r); };
+    img.onload = () => done(img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 16/9);
+    img.onerror = () => res(16/9);
+    setTimeout(() => res(shapeCache[id] || 16/9), 2500);
+    img.src = `https://drive.google.com/thumbnail?id=${id}&sz=w400`;
+  });
+}
+let shapeToken = 0;
+function applyShape(v){
+  const inner = document.querySelector(".modal-inner"), tok = ++shapeToken;
+  videoRatio(v).then(r => {
+    if(tok !== shapeToken) return;
+    const tall = r < 1.2;   // portrait, 4:5 and square get the side-by-side layout
+    inner.classList.toggle("tall", tall);
+    inner.style.setProperty("--ar", tall ? String(r) : "");
+  });
+}
+
 function playVid(n){
   const v = openVids[n], src = embedSrc(v.link);
   mVideo.innerHTML = src
@@ -666,6 +719,7 @@ function playVid(n){
     : `<div class="empty-note mono">No video linked yet for “${esc(v.label)}”</div>`;
   if(!reduceMotion) mVideo.animate([{opacity:0},{opacity:1}], {duration:400, easing:"ease-out"});
   mStrip.querySelectorAll("button").forEach((b,k) => b.setAttribute("aria-pressed", k === n));
+  applyShape(v);
   showFacts(v);
 }
 let openProj = null;
