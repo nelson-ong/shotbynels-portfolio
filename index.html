@@ -190,7 +190,8 @@ nav a:hover{color:var(--ink)}
 .mnav[hidden]{display:none}
 .arr{position:absolute;top:50%;width:48px;height:48px;margin-top:-24px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);display:grid;place-items:center;transition:background .25s,border-color .25s,transform .35s var(--ease)}
 .arr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s var(--ease)}
-.arr:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.arr:hover:not(:disabled){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.arr:disabled{opacity:.25;cursor:default;transform:none!important}
 .arr.prev{left:-72px}.arr.next{right:-72px}
 .arr.prev:hover{transform:translateX(-3px)}.arr.next:hover{transform:translateX(3px)}
 .count{position:absolute;right:0;top:calc(100% + 14px);color:var(--muted)}
@@ -880,23 +881,22 @@ function applyShape(v){
 
 let curProj = -1, curVid = 0;
 function playlist(){
-  const list = [];
-  // arrows stay inside the open project's category (e.g. Brand → only Brand videos)
-  const cat = curProj > -1 ? PROJECTS[curProj].category : null;
-  shown.filter(p => !cat || p.category === cat).forEach(p => vids(p).forEach((v, n) => list.push([p.i, n])));
-  return list;
+  // arrows only move between the videos of the project that's open (e.g. Social Content 01 → 09), never into another project
+  return curProj > -1 ? vids(PROJECTS[curProj]).map((v, n) => [curProj, n]) : [];
 }
 function step(dir){
   const list = playlist(); if(list.length < 2) return;
-  let pos = list.findIndex(([i, n]) => i === curProj && n === curVid);
-  const [i, n] = list[(pos + dir + list.length) % list.length];
-  if(i === curProj) playVid(n);
-  else openProject(i, lastFocus, n);
+  const pos = list.findIndex(([i, n]) => i === curProj && n === curVid);
+  const next = pos + dir;
+  if(next < 0 || next >= list.length) return;   // stop at the first / last video
+  playVid(list[next][1]);
 }
 function updateNav(){
   const list = playlist(), nav = document.getElementById("mNav");
   nav.hidden = list.length < 2;
   const pos = list.findIndex(([i, n]) => i === curProj && n === curVid);
+  document.getElementById("mPrev").disabled = pos <= 0;
+  document.getElementById("mNext").disabled = pos >= list.length - 1;
   document.getElementById("mCount").textContent = `${pad(pos + 1)} / ${pad(list.length)}`;
 }
 function playVid(n){
