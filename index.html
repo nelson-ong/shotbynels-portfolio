@@ -507,7 +507,9 @@ async function loadSheet(){
   // Each row can carry one video ("Video"/"Label") or several ("Video 1", "Label 1", "Client 1"…).
   // Rows with the same Title are merged into one project, so each video can have its own client.
   const rowProjects = rows.map(r => {
-    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format") };
+    // Hidden: "yes" hides this row's video only; "all" (on the title row) hides the whole project
+    const h = col(r, "hidden");
+    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format"), hidden: yes(h) };
     const videos = [];
     const single = col(r, "video");
     if(single) videos.push({ ...base, label: col(r, "label"), link: single });
@@ -517,7 +519,7 @@ async function loadSheet(){
         client: col(r, `client ${n}`) || base.client, featuring: col(r, `featuring ${n}`) || base.featuring, role: col(r, `role ${n}`) || base.role, format: col(r, `format ${n}`) || base.format });
     }
     return {
-      title: col(r, "title"), category: col(r, "category") || "Other", hidden: yes(col(r, "hidden")),
+      title: col(r, "title"), category: col(r, "category") || "Other", hideAll: /^(all|project|whole project)$/i.test(h),
       thumb: col(r, "thumbnail") || undefined, ...base, videos
     };
   });
@@ -532,12 +534,12 @@ async function loadSheet(){
     const key = p.title.toLowerCase();
     const found = merged.find(m => m.title.toLowerCase() === key);
     if(!found){ merged.push(p); return; }
-    found.videos.push(...(p.videos.length ? p.videos : [{ client: p.client, featuring: p.featuring, role: p.role, year: p.year, desc: p.desc, label: "", link: "" }]));
-    found.hidden = found.hidden && p.hidden;
+    found.videos.push(...p.videos);
   });
-  // label any unnamed videos: use the client name, then "Part n"
   // label any unnamed videos: real client name, then who's featured, then "Film 02"
   merged.forEach(p => {
+    p.videos = p.videos.filter(v => !v.hidden);   // drop hidden videos
+    p.hidden = !!p.hideAll;
     const auto = new Set();
     p.videos.forEach((v, n) => {
       const realClient = isPersonalClient(v.client) ? "" : v.client;
