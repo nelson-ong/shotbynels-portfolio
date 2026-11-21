@@ -252,6 +252,8 @@ nav a:hover{color:var(--ink)}
   .modal-inner.tall .facts{flex-direction:row}
 }
 .modal-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.modal-video video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;outline:none}
+video.vthumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#dcdcd8}
 .modal-info{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
 .modal-info h3{font-size:22px;font-weight:500;letter-spacing:-.025em}
 .modal-info p{color:var(--muted)}
@@ -553,7 +555,7 @@ async function loadSheet(){
   const rowProjects = rows.map(r => {
     // Hidden: "yes" hides this row's video only; "all" (on the title row) hides the whole project
     const h = col(r, "hidden");
-    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format"), hidden: yes(h), still: col(r, "still") };
+    const base = { client: col(r, "client"), featuring: col(r, "featuring"), role: col(r, "role"), year: col(r, "year"), desc: col(r, "description"), format: col(r, "format"), hidden: yes(h), still: col(r, "still"), thumb: col(r, "thumbnail") || undefined };
     const videos = [];
     const single = col(r, "video");
     if(single) videos.push({ ...base, label: col(r, "label"), link: single });
@@ -564,7 +566,7 @@ async function loadSheet(){
     }
     return {
       title: col(r, "title"), category: col(r, "category") || "Other", hideAll: /^(all|project|whole project)$/i.test(h),
-      thumb: col(r, "thumbnail") || undefined, ...base, videos
+      ...base, thumb: undefined, videos
     };
   });
   const merged = [];
@@ -636,11 +638,29 @@ function vids(p){
     return p.videos.map((v,n) => ({ ...v, label: v.label || `Part ${n+1}`, link: v.link || "" }));
   return [{label: p.title, link: p.link || ""}];
 }
-function thumbSrc(p){
-  if(p.thumb) return p.thumb;
-  const id = driveId(vids(p)[0].link);
-  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1280` : "";
+// Direct video files (Cloudflare R2, or any .mp4/.webm/.mov link) play in the site's own player
+const isFile = l => /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(String(l || "").trim());
+// An image link: Drive links become Drive thumbnails, anything else is used as-is
+const imgUrl = (l, w = 1000) => { const id = driveId(l); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${w}` : l; };
+// Best picture for a video: its Thumbnail column → Drive's thumbnail → a frame from the video file itself
+function vThumb(v, w = 1000){
+  if(v.thumb) return { img: imgUrl(v.thumb, w) };
+  const id = driveId(v.link);
+  if(id && !isFile(v.link)) return { img: `https://drive.google.com/thumbnail?id=${id}&sz=w${w}` };
+  if(isFile(v.link)) return { video: v.link };
+  return {};
 }
+function thumbHTML(t){
+  if(t.img) return `<img src="${esc(t.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  if(t.video) return `<video class="vthumb" src="${esc(t.video)}#t=1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`;
+  return "";
+}
+function thumbSrc(p){
+  if(p.thumb) return imgUrl(p.thumb, 1280);
+  const t = vThumb(vids(p)[0], 1280);
+  return t.img || "";
+}
+const projThumb = p => p.thumb ? { img: imgUrl(p.thumb, 1280) } : vThumb(vids(p)[0], 1280);
 
 const shown = PROJECTS.map((p,i) => ({...p, i})).filter(p => !p.hidden);
 
@@ -771,9 +791,9 @@ function render(){
       <span class="y mono">${esc(p.year ?? "")}</span>
     </button></li>`).join("");
   grid.innerHTML = items.map(p => {
-    const t = thumbSrc(p);
+    const th = thumbHTML(projThumb(p));
     return `<button class="tile" type="button" data-i="${p.i}" aria-label="Play ${esc(p.title)}">
-      <div class="img">${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : `<div class="ph mono">No thumbnail</div>`}${vids(p).length > 1 ? `<span class="badge mono">${vids(p).length} films</span>` : ""}</div>
+      <div class="img">${th || `<div class="ph mono">No thumbnail</div>`}${vids(p).length > 1 ? `<span class="badge mono">${vids(p).length} films</span>` : ""}</div>
       <div class="cap"><b>${esc(p.title)}</b><span class="mono">${esc(p.year ?? "")}</span></div>
       <div class="sub">${esc(p.role)}</div>
     </button>`;
@@ -789,7 +809,7 @@ render();
 
 // ---- Stills carousel: Stills tab in the Sheet, or frames from your project videos ----
 (function(){
-  const imgSrc = l => { const id = driveId(l); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : l; };
+  const imgSrc = l => imgUrl(l, 1000);
   let items;
   // 1) Projects tab → "Still" column: tick (or yes) a video to feature it; or paste an image link to use that frame
   const picked = [];
@@ -797,31 +817,30 @@ render();
     const st = String(v.still || "").trim();
     if(!st || /^(false|no|n|0)$/i.test(st)) return;
     const custom = /^https?:|^\//i.test(st) ? st : "";
-    const id = driveId(v.link);
-    const src = custom ? imgSrc(custom) : (id ? imgSrc(id) : "");
-    if(src) picked.push({ src, caption: (vids(p).length > 1 ? v.label : "") || p.title, i: p.i, v: n });
+    const t = custom ? { img: imgSrc(custom) } : vThumb(v, 1000);
+    if(t.img || t.video) picked.push({ t, caption: (vids(p).length > 1 ? v.label : "") || p.title, i: p.i, v: n });
   }));
   if(picked.length){
     items = picked;
   } else if(Array.isArray(SITE.stills) && SITE.stills.length){
     items = SITE.stills.map(x => {
       const p = x.project ? PROJECTS.findIndex(q => q.title.toLowerCase() === x.project.toLowerCase()) : -1;
-      return { src: imgSrc(x.image), caption: x.caption || (p > -1 ? PROJECTS[p].title : ""), i: p };
+      return { t: { img: imgSrc(x.image) }, caption: x.caption || (p > -1 ? PROJECTS[p].title : ""), i: p };
     });
   } else {
     items = [];
     shown.forEach(p => {
-      if(p.thumb) items.push({ src: p.thumb, caption: p.title, i: p.i });
-      vids(p).forEach(v => { const id = driveId(v.link); if(id) items.push({ src: imgSrc(id), caption: v.label || p.title, i: p.i }); });
+      vids(p).forEach((v, n) => { const t = vThumb(v, 1000); if(t.img || t.video) items.push({ t, caption: v.label || p.title, i: p.i, v: n }); });
     });
     // drop exact duplicates
-    items = items.filter((x, k) => items.findIndex(y => y.src === x.src) === k);
+    const key = x => x.t.img || x.t.video;
+    items = items.filter((x, k) => items.findIndex(y => key(y) === key(x)) === k);
   }
   const sec = document.getElementById("clientsSec");
   if(!items.length){ sec.remove(); return; }
   document.getElementById("clientCount").textContent = pad(items.length);
   const one = items.map(x => {
-    const inner = `<img src="${esc(x.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ""}`;
+    const inner = `${thumbHTML(x.t)}${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ""}`;
     return x.i > -1
       ? `<button type="button" class="still" data-i="${x.i}" data-sv="${x.v ?? 0}" aria-label="Play ${esc(x.caption)}">${inner}</button>`
       : `<figure class="still">${inner}</figure>`;
@@ -859,8 +878,8 @@ list.addEventListener("mousemove", e => {
   const r = e.target.closest(".row");
   if(r && +r.dataset.i !== current){
     current = +r.dataset.i;
-    const t = thumbSrc(PROJECTS[current]);
-    preview.innerHTML = t ? `<img src="${t}" alt="" referrerpolicy="no-referrer">` : `<div class="ph mono">${esc(PROJECTS[current].title)}</div>`;
+    const th = thumbHTML(projThumb(PROJECTS[current]));
+    preview.innerHTML = th || `<div class="ph mono">${esc(PROJECTS[current].title)}</div>`;
   }
   preview.classList.toggle("on", !!r);
 });
@@ -887,6 +906,18 @@ function formatRatio(f){
 function videoRatio(v){
   const fixed = formatRatio(v.format);
   if(fixed) return Promise.resolve(fixed);
+  if(isFile(v.link)){
+    const key = v.link;
+    if(shapeCache[key]) return Promise.resolve(shapeCache[key]);
+    return new Promise(res => {
+      const probe = document.createElement("video");
+      probe.preload = "metadata"; probe.muted = true;
+      probe.onloadedmetadata = () => { const r = probe.videoWidth && probe.videoHeight ? probe.videoWidth / probe.videoHeight : 16/9; shapeCache[key] = r; res(r); probe.removeAttribute("src"); probe.load(); };
+      probe.onerror = () => res(16/9);
+      setTimeout(() => res(shapeCache[key] || 16/9), 3000);
+      probe.src = v.link;
+    });
+  }
   const id = driveId(v.link);
   if(!id) return Promise.resolve(16/9);
   if(shapeCache[id]) return Promise.resolve(shapeCache[id]);
@@ -933,10 +964,18 @@ function updateNav(){
 }
 function playVid(n){
   curVid = n;
-  const v = openVids[n], src = embedSrc(v.link);
-  mVideo.innerHTML = src
-    ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="${esc(v.label)}"></iframe>`
-    : `<div class="empty-note mono">No video linked yet for “${esc(v.label)}”</div>`;
+  const v = openVids[n];
+  if(isFile(v.link)){
+    const poster = v.thumb ? ` poster="${esc(imgUrl(v.thumb, 1600))}"` : "";
+    mVideo.innerHTML = `<video src="${esc(v.link)}" controls autoplay playsinline preload="auto" controlslist="nodownload"${poster} title="${esc(v.label)}"></video>`;
+    const el = mVideo.querySelector("video");
+    el.play().catch(() => {});   // if the browser blocks sound-on autoplay, the play button is still there
+  } else {
+    const src = embedSrc(v.link);
+    mVideo.innerHTML = src
+      ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="${esc(v.label)}"></iframe>`
+      : `<div class="empty-note mono">No video linked yet for “${esc(v.label)}”</div>`;
+  }
   if(!reduceMotion) mVideo.animate([{opacity:0},{opacity:1}], {duration:400, easing:"ease-out"});
   mStrip.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.v === n));
   mStrip.querySelectorAll(".th").forEach(b => b.setAttribute("aria-pressed", +b.dataset.v === n));
@@ -983,13 +1022,13 @@ function openProject(i, from, startVid = 0){
     const g = groups.find(x => x.key === key);
     g ? g.items.push(n) : groups.push({ key, label: v.label, items: [n] });
   });
-  const thumbFor = v => { const id = driveId(v.link); return v.thumb || (id ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : ""); };
+
   mStrip.innerHTML = groups.map(g => `<div class="tg">
       <button type="button" class="tg-name" data-v="${g.items[0]}">${esc(g.label)}${g.items.length > 1 ? `<span class="tg-count">${g.items.length}</span>` : ""}</button>
       <div class="tg-thumbs">${g.items.map((n, k) => {
-        const t = thumbFor(openVids[n]);
+        const th = thumbHTML(vThumb(openVids[n], 400));
         return `<button type="button" class="th" data-v="${n}" aria-pressed="false" aria-label="${esc(g.label)}${g.items.length > 1 ? " " + (k+1) : ""}">
-          ${t ? `<img src="${esc(t)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
+          ${th}
           ${g.items.length > 1 ? `<span class="th-n">${pad(k+1)}</span>` : ""}
         </button>`;
       }).join("")}</div>
