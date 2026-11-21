@@ -164,19 +164,45 @@ nav a:hover{color:var(--ink)}
 /* Modal */
 .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,56px);background:rgba(242,242,240,0);visibility:hidden;transition:background .4s var(--ease),visibility 0s .4s}
 .modal.open{visibility:visible;background:rgba(242,242,240,.97);transition:background .4s var(--ease)}
-.modal-inner{width:min(1240px,100%);display:grid;gap:14px;opacity:0;transform:translateY(16px);transition:opacity .4s var(--ease),transform .5s var(--ease)}
+.modal-inner{width:min(1240px,calc(100% - 136px));display:grid;gap:14px;opacity:0;transform:translateY(16px);transition:opacity .4s var(--ease),transform .5s var(--ease)}
 .modal.open .modal-inner{opacity:1;transform:none}
 .modal-video{position:relative;aspect-ratio:16/9;background:#111;transition:aspect-ratio .5s var(--ease)}
+/* Prev / next arrows: beside the video (left/right), or stacked beside a tall video (up/down) */
+.vwrap{position:relative}
+.mnav[hidden]{display:none}
+.arr{position:absolute;top:50%;width:48px;height:48px;margin-top:-24px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);display:grid;place-items:center;transition:background .25s,border-color .25s,transform .35s var(--ease)}
+.arr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s var(--ease)}
+.arr:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.arr.prev{left:-72px}.arr.next{right:-72px}
+.arr.prev:hover{transform:translateX(-3px)}.arr.next:hover{transform:translateX(3px)}
+.count{position:absolute;right:0;top:calc(100% + 14px);color:var(--muted)}
+.modal-inner.tall .arr{left:auto;right:-72px}
+.modal-inner.tall .arr.prev{margin-top:-56px}
+.modal-inner.tall .arr.next{margin-top:8px}
+.modal-inner.tall .arr svg{transform:rotate(90deg)}
+.modal-inner.tall .arr.prev:hover{transform:translateY(-3px)}.modal-inner.tall .arr.next:hover{transform:translateY(3px)}
+.modal-inner.tall .count{top:calc(50% + 68px);right:-72px;width:48px;display:flex;justify-content:center;white-space:nowrap}
+@media (max-width:760px){
+  .modal-inner{width:100%}
+  .arr{width:40px;height:40px;margin-top:-20px;background:rgba(242,242,240,.85);border-color:transparent}
+  .arr.prev{left:8px}.arr.next{right:8px}
+  .modal-inner.tall .arr{right:8px}
+  .modal-inner.tall .arr.prev{margin-top:-46px}.modal-inner.tall .arr.next{margin-top:6px}
+  .modal-inner.tall .count{display:none}
+}
+
 /* Portrait & square videos: video on the left at full height, details beside it */
-.modal-inner.tall{width:auto;max-width:100%;grid-template-columns:auto minmax(240px,360px);grid-template-rows:1fr auto;column-gap:clamp(24px,4vw,56px);align-items:end}
-.modal-inner.tall .modal-video{grid-row:1 / span 2;height:min(84vh,960px);width:auto;aspect-ratio:var(--ar,9/16);max-width:calc(100vw - 480px)}
+.modal-inner.tall{width:auto;max-width:100%;grid-template-columns:auto minmax(240px,360px);grid-template-rows:1fr auto;column-gap:clamp(88px,8vw,120px);align-items:end}
+.modal-inner.tall .vwrap{grid-row:1 / span 2}
+.modal-inner.tall .modal-video{height:min(84vh,960px);width:auto;aspect-ratio:var(--ar,9/16);max-width:calc(100vw - 560px)}
 .modal-inner.tall .strip{grid-column:2;grid-row:1;align-self:end;flex-direction:column;align-items:flex-start;gap:10px;border-top:0;padding-top:0;margin-bottom:16px}
 .modal-inner.tall .modal-info{grid-column:2;grid-row:2;flex-direction:column;gap:18px;border-top:1px solid var(--line);padding-top:16px}
 .modal-inner.tall .facts{flex-direction:column;gap:14px}
 .modal-inner.tall .close{order:-1;align-self:flex-start}
 @media (max-width:760px){
   .modal-inner.tall{grid-template-columns:1fr;grid-template-rows:auto;justify-items:center}
-  .modal-inner.tall .modal-video{grid-row:auto;height:min(68vh,720px);max-width:100%}
+  .modal-inner.tall .vwrap{grid-row:auto}
+  .modal-inner.tall .modal-video{height:min(68vh,720px);max-width:100%}
   .modal-inner.tall .strip,.modal-inner.tall .modal-info{grid-column:1;grid-row:auto;width:100%;flex-direction:row;flex-wrap:wrap}
   .modal-inner.tall .facts{flex-direction:row}
   .modal-inner.tall .close{order:0}
@@ -362,7 +388,14 @@ let PROJECTS = [
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="modal-inner">
-    <div class="modal-video" id="mVideo"></div>
+    <div class="vwrap">
+      <div class="modal-video" id="mVideo"></div>
+      <div class="mnav" id="mNav">
+        <button class="arr prev" id="mPrev" type="button" aria-label="Previous video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button class="arr next" id="mNext" type="button" aria-label="Next video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        <span class="count mono" id="mCount"></span>
+      </div>
+    </div>
     <div class="strip mono" id="mStrip" role="group" aria-label="Videos in this project" hidden></div>
     <div class="modal-info">
       <div><h3 id="mTitle"></h3><dl class="facts" id="mFacts"></dl><p class="desc" id="mDesc"></p></div>
@@ -578,9 +611,11 @@ document.querySelector(".views").addEventListener("click", e => {
 });
 
 // ---- Render list + grid ----
+let currentItems = [];
 const list = document.getElementById("list"), grid = document.getElementById("grid");
 function render(){
   const items = shown.filter(p => active === "All" || p.category === active);
+  currentItems = items;
   list.hidden = view !== "list"; grid.hidden = view !== "grid";
   list.innerHTML = items.map((p,n) => `
     <li><button class="row" type="button" data-i="${p.i}" aria-label="Play ${esc(p.title)}">
@@ -712,7 +747,27 @@ function applyShape(v){
   });
 }
 
+let curProj = -1, curVid = 0;
+function playlist(){
+  const list = [];
+  (currentItems.length ? currentItems : shown).forEach(p => vids(p).forEach((v, n) => list.push([p.i, n])));
+  return list;
+}
+function step(dir){
+  const list = playlist(); if(list.length < 2) return;
+  let pos = list.findIndex(([i, n]) => i === curProj && n === curVid);
+  const [i, n] = list[(pos + dir + list.length) % list.length];
+  if(i === curProj) playVid(n);
+  else openProject(i, lastFocus, n);
+}
+function updateNav(){
+  const list = playlist(), nav = document.getElementById("mNav");
+  nav.hidden = list.length < 2;
+  const pos = list.findIndex(([i, n]) => i === curProj && n === curVid);
+  document.getElementById("mCount").textContent = `${pad(pos + 1)} / ${pad(list.length)}`;
+}
 function playVid(n){
+  curVid = n;
   const v = openVids[n], src = embedSrc(v.link);
   mVideo.innerHTML = src
     ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="${esc(v.label)}"></iframe>`
@@ -721,6 +776,7 @@ function playVid(n){
   mStrip.querySelectorAll("button").forEach((b,k) => b.setAttribute("aria-pressed", k === n));
   applyShape(v);
   showFacts(v);
+  updateNav();
 }
 let openProj = null;
 function showFacts(v){
@@ -740,22 +796,26 @@ function showFacts(v){
 mStrip.addEventListener("click", e => {
   const b = e.target.closest("[data-v]"); if(b && b.getAttribute("aria-pressed") !== "true") playVid(+b.dataset.v);
 });
-function openProject(i, from){
+function openProject(i, from, startVid = 0){
+  const wasOpen = modal.classList.contains("open");
   const p = PROJECTS[i];
+  curProj = i;
   lastFocus = from;
   openProj = p;
   openVids = vids(p);
   mStrip.hidden = openVids.length < 2;
   mStrip.innerHTML = openVids.map((v,n) =>
     `<button type="button" data-v="${n}" aria-pressed="false"><sup>${pad(n+1)}</sup><span class="lb">${esc(v.label)}</span></button>`).join("");
-  playVid(0);
+  playVid(startVid);
   document.getElementById("mTitle").textContent = p.title;
+  if(!reduceMotion && modal.classList.contains("open"))
+    document.querySelector(".modal-info").animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}], {duration:400, easing:"ease-out"});
 
   preview.classList.remove("on");
   modal.classList.add("open");
   window.__lenis && window.__lenis.stop();
   document.body.style.overflow = "hidden";
-  document.getElementById("mClose").focus();
+  if(!wasOpen) document.getElementById("mClose").focus({preventScroll:true});
 }
 document.getElementById("work").addEventListener("click", e => {
   const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b);
@@ -769,7 +829,14 @@ function closeModal(){
 }
 document.getElementById("mClose").addEventListener("click", closeModal);
 modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
-document.addEventListener("keydown", e => { if(e.key === "Escape" && modal.classList.contains("open")) closeModal(); });
+document.addEventListener("keydown", e => {
+  if(!modal.classList.contains("open")) return;
+  if(e.key === "Escape") closeModal();
+  else if(e.key === "ArrowRight" || e.key === "ArrowDown"){ e.preventDefault(); step(1); }
+  else if(e.key === "ArrowLeft" || e.key === "ArrowUp"){ e.preventDefault(); step(-1); }
+});
+document.getElementById("mPrev").addEventListener("click", () => step(-1));
+document.getElementById("mNext").addEventListener("click", () => step(1));
 
 // ---- Contact ----
 const mail = document.getElementById("mail");
