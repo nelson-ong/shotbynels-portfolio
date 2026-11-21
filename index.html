@@ -130,7 +130,9 @@ nav a:hover{color:var(--ink)}
 .tgroup.on .gname{color:var(--ink)}
 .tgroup .num{font-size:11px}
 @media (max-width:760px){
-  .strip{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px 22px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .strip{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;scrollbar-width:none;gap:6px 22px;padding-bottom:4px;-webkit-overflow-scrolling:touch;
+    margin-right:calc(-1 * clamp(12px,4vw,56px));padding-right:clamp(12px,4vw,56px)}
+  .modal{overflow-y:auto;align-items:flex-start;padding-top:72px}
   .strip::-webkit-scrollbar{display:none}
   .strip > *{flex:none;white-space:nowrap}
 }
@@ -460,7 +462,7 @@ let PROJECTS = [
 
   <section class="clients-sec rise" id="clientsSec">
     <div class="clients-head mono"><span>Stills</span><span id="clientCount"></span></div>
-    <div class="marquee" id="marquee" aria-label="Stills from recent work"><div class="track" id="track"></div></div>
+    <div class="marquee" id="marquee" aria-label="Stills from recent work" data-lenis-prevent-touch><div class="track" id="track"></div></div>
   </section>
 
   <section class="about" id="about">
@@ -480,7 +482,7 @@ let PROJECTS = [
 
 <div class="preview" id="preview" aria-hidden="true"></div>
 
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" data-lenis-prevent>
   <button class="xclose" id="mClose" type="button" aria-label="Close video">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
