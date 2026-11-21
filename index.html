@@ -153,6 +153,17 @@ nav a:hover{color:var(--ink)}
   .track .dup{display:none}
 }
 
+/* Stills on phones: swipe with snapping, captions always visible */
+.marquee.swipe{overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:18px clamp(16px,3.2vw,48px) 4px;scroll-padding-left:clamp(16px,3.2vw,48px);-webkit-mask-image:none;mask-image:none}
+.marquee.swipe::-webkit-scrollbar{display:none}
+.marquee.swipe .track{animation:none}
+.marquee.swipe .still{height:auto;width:78vw;max-width:420px;scroll-snap-align:start}
+.marquee.swipe .still img{aspect-ratio:16/9}
+.marquee.swipe .still figcaption{opacity:1;transform:none}
+.marquee.swipe:hover .still{opacity:1}
+.marquee.swipe .grp::after{content:"";flex:0 0 clamp(16px,3.2vw,48px)}
+
 /* About / contact */
 .about{padding:clamp(80px,10vw,130px) 0;display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
 .about .label{grid-column:1 / span 3;color:var(--muted)}
@@ -162,7 +173,7 @@ nav a:hover{color:var(--ink)}
 @media (max-width:760px){.about .label,.about .body{grid-column:1 / -1}}
 
 .contact{border-top:1px solid var(--ink);padding:40px 0 28px}
-.big-mail{display:inline-block;font-size:clamp(34px,7vw,104px);line-height:1;letter-spacing:-.05em;font-weight:500;position:relative}
+.big-mail{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-size:clamp(26px,7vw,104px);line-height:1;letter-spacing:-.05em;font-weight:500;position:relative}
 .big-mail::after{content:"";position:absolute;left:0;bottom:-6px;height:2px;width:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .6s var(--ease)}
 .big-mail:hover::after{transform:scaleX(1)}
 .foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;color:var(--muted);margin-top:56px}
@@ -773,6 +784,12 @@ render();
   const track = document.getElementById("track");
   track.innerHTML = `<div style="display:flex" class="grp">${one}</div>`;
   const grp = track.firstElementChild;
+  // phones and touch screens get a swipeable strip instead of the auto-scroll loop
+  if(matchMedia("(hover: none), (max-width: 760px)").matches){
+    document.getElementById("marquee").classList.add("swipe");
+    sec.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) openProject(+b.dataset.i, b); });
+    return;
+  }
   let guard = 0;
   while(grp.scrollWidth < innerWidth * 1.2 && guard++ < 20) grp.insertAdjacentHTML("beforeend", one);
   track.insertAdjacentHTML("beforeend", `<div style="display:flex" class="grp dup" aria-hidden="true">${grp.innerHTML.replace(/<button /g, '<button tabindex="-1" ')}</div>`);
@@ -956,7 +973,10 @@ if(SITE.instagram) document.getElementById("ig").innerHTML = `<a href="https://i
 const reelEl = document.getElementById("reel");
 function reelScroll(){
   const g = parseFloat(getComputedStyle(document.querySelector("main")).paddingLeft) || 16;
-  if(reduceMotion){ reelEl.style.setProperty("--ix", g + "px"); return; }
+  if(reduceMotion || innerWidth < 760){
+    reelEl.style.setProperty("--ix", g + "px"); reelEl.style.setProperty("--iy", "0px"); reelEl.style.setProperty("--r", "4px");
+    return;
+  }
   const r = reelEl.getBoundingClientRect(), vh = innerHeight;
   const t = Math.min(1, Math.max(0, 1 - (r.top - vh * .08) / (vh * .7)));
   const ix = (1 - t) * (g + innerWidth * .05);
