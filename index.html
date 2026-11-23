@@ -149,7 +149,7 @@ nav a:hover{color:var(--ink)}
 @media (max-width:760px){
   .strip{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;scrollbar-width:none;gap:6px 22px;padding-bottom:4px;-webkit-overflow-scrolling:touch;
     margin-right:calc(-1 * clamp(12px,4vw,56px));padding-right:clamp(12px,4vw,56px)}
-  .modal{overflow-y:auto;align-items:flex-start;padding-top:72px}
+  #modal{padding-top:max(68px,calc(env(safe-area-inset-top) + 56px));padding-bottom:max(24px,env(safe-area-inset-bottom))}
   .strip::-webkit-scrollbar{display:none}
   .strip > *{flex:none;white-space:nowrap}
 }
@@ -224,10 +224,11 @@ nav a:hover{color:var(--ink)}
 .foot a:hover{color:var(--ink)}
 
 /* Modal */
-.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,56px);background:rgba(242,242,240,0);visibility:hidden;transition:background .4s var(--ease),visibility 0s .4s}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:clamp(12px,4vw,56px);background:rgba(242,242,240,0);visibility:hidden;transition:background .4s var(--ease),visibility 0s .4s}
 .modal.open{visibility:visible;background:rgba(242,242,240,.97);transition:background .4s var(--ease)}
 .modal-inner{width:min(1240px,calc(100% - 136px));display:grid;gap:14px;opacity:0;transform:translateY(16px);transition:opacity .4s var(--ease),transform .5s var(--ease)}
 .modal.open .modal-inner{opacity:1;transform:none}
+.modal-inner{margin:auto}
 .modal-video{position:relative;aspect-ratio:16/9;background:#111;transition:aspect-ratio .5s var(--ease)}
 /* Prev / next arrows: beside the video (left/right), or stacked beside a tall video (up/down) */
 .vwrap{position:relative}
@@ -264,7 +265,7 @@ nav a:hover{color:var(--ink)}
 @media (max-width:760px){
   .modal-inner.tall{grid-template-columns:1fr;grid-template-rows:auto;justify-items:center}
   .modal-inner.tall .vwrap{grid-row:auto}
-  .modal-inner.tall .modal-video{height:min(68vh,720px);max-width:100%}
+  .modal-inner.tall .modal-video{height:min(62vh,62svh,720px);max-width:100%}
   .modal-inner.tall .strip,.modal-inner.tall .modal-info{grid-column:1;grid-row:auto;width:100%;flex-direction:row;flex-wrap:wrap}
   .modal-inner.tall .facts{flex-direction:row}
 }
