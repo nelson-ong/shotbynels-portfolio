@@ -547,7 +547,7 @@ async function loadSheet(){
   }
 
   const rows = parseCSV(projCsv);
-  const head = rows.shift().map(h => h.trim().toLowerCase());
+  const head = rows.shift().map(h => h.trim().toLowerCase().replace(/\s*\(.*?\)\s*/g, " ").trim());   // "Hidden (Yes/No)" → "hidden"
   const col = (r, name) => (r[head.indexOf(name)] ?? "").trim();
   const yes = v => /^(yes|y|true|x|hide|hidden)$/i.test(v);
   // Each row can carry one video ("Video"/"Label") or several ("Video 1", "Label 1", "Client 1"…).
